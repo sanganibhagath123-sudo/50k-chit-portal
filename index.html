@@ -24,7 +24,7 @@
             --lamp-matte: #e8e2d9; 
             --lamp-shade: #f5f0e6;
             --lamp-base: #d1ccc2;
-            --glow-color: rgba(255, 214, 110, 0.3);
+            --glow-color: rgba(225, 235, 255, 0.10);
             --accent-color: #d4a373; 
             --on: 0;
             --transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -175,7 +175,7 @@
         }
 
         .inner-glow {
-            fill: #ffdb8a;
+            fill: #ffffff;
             opacity: 0;
             transition: opacity var(--transition);
             filter: blur(15px);
@@ -4304,6 +4304,177 @@
             .lang-toggle-btn:not(.is-login) { margin-right: 6px; }
         }
 
+
+
+        /* =========================================
+           NIGHT SKY + WHITE LAMP LIGHT (login screen)
+           ========================================= */
+        #nightSky {
+            position: fixed; inset: 0; width: 100vw; height: 100vh;
+            z-index: 0; pointer-events: none; display: block;
+            background:
+                radial-gradient(ellipse 80% 55% at 50% -8%, #1d2a5c 0%, rgba(29, 42, 92, 0) 70%),
+                radial-gradient(ellipse 60% 40% at 85% 15%, rgba(76, 52, 140, 0.35) 0%, rgba(76, 52, 140, 0) 70%),
+                linear-gradient(180deg, #070b1d 0%, #05070f 55%, #030409 100%);
+        }
+        #lampGlow {
+            position: absolute; left: 0; top: 0;
+            width: 1000px; height: 1000px; margin: -500px 0 0 -500px;
+            border-radius: 50%; pointer-events: none; z-index: 0;
+            background: radial-gradient(circle,
+                rgba(255, 255, 255, 0.34) 0%,
+                rgba(236, 242, 255, 0.20) 14%,
+                rgba(214, 226, 255, 0.10) 30%,
+                rgba(200, 214, 255, 0.04) 46%,
+                rgba(200, 214, 255, 0) 64%);
+            opacity: 0; transform: scale(0.85);
+            transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        [data-on="true"] #lampGlow { opacity: 1; transform: scale(1); }
+        body.portal-active #nightSky, body.portal-active #lampGlow { display: none; }
+        [data-on="true"] .lamp-shade { filter: drop-shadow(0 0 28px rgba(255, 255, 255, 0.65)) drop-shadow(0 0 70px rgba(220, 232, 255, 0.35)) !important; }
+        /* login card: cool night glass */
+        body:not(.portal-active) .login-form {
+            background: linear-gradient(160deg, rgba(30, 36, 60, 0.86), rgba(14, 16, 26, 0.9)) !important;
+            border-color: rgba(200, 214, 255, 0.14) !important;
+        }
+        @media (max-width: 600px) {
+            #lampGlow { width: 640px; height: 640px; margin: -320px 0 0 -320px; }
+        }
+        /* =========================================
+           MONEY RAIN (replaces balloons)
+           ========================================= */
+        /* Login card: a bit more solid so falling notes behind it don't show as colour blobs */
+        body:not(.portal-active) .login-form {
+            background: linear-gradient(160deg, rgba(58, 52, 40, 0.88), rgba(30, 31, 36, 0.9));
+        }
+        .money-note, .money-coin, .money-bag {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            will-change: transform;
+            touch-action: manipulation;
+        }
+        .money-note {
+            width: 96px; height: 46px;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 7px;
+            box-sizing: border-box;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45), inset 0 0 0 2px rgba(255, 255, 255, 0.22), inset 0 0 0 4px rgba(0, 0, 0, 0.12);
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+        .money-note::before {
+            /* subtle guilloche-like pattern */
+            content: ''; position: absolute; inset: 0;
+            background:
+                repeating-linear-gradient(115deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 7px),
+                radial-gradient(circle at 30% 50%, rgba(255,255,255,0.25), transparent 45%);
+            pointer-events: none;
+        }
+        .note-lavender { background: linear-gradient(135deg, #7d6bb8, #c8b8ef 52%, #6a58a3); color: #2a1d52; }
+        .note-yellow   { background: linear-gradient(135deg, #d99a12, #fbe07a 52%, #c4840c); color: #3f2a00; }
+        .note-stone    { background: linear-gradient(135deg, #7c7e75, #cfd0c6 52%, #66685f); color: #23241f; }
+        .money-note::after {
+            /* thin gold frame */
+            content: ''; position: absolute; inset: 3px; border-radius: 4px;
+            border: 1px solid rgba(255, 215, 0, 0.55); pointer-events: none;
+        }
+        .mn-corner { font-size: 11px; font-weight: 900; align-self: flex-start; margin-top: 4px; position: relative; }
+        .mn-corner.mn-r { align-self: flex-end; margin: 0 0 4px; }
+        .mn-seal {
+            position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+            width: 24px; height: 24px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35); border: 1.5px solid rgba(255, 215, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; padding: 3px; box-sizing: border-box;
+        }
+        .mn-seal svg { width: 100%; height: 100%; display: block; }
+        .mn-center { position: relative; display: flex; flex-direction: column; align-items: center; line-height: 1; margin-left: 20px; }
+        .mn-center b { font-size: 19px; font-weight: 900; }
+        .mn-center small { font-size: 7px; font-weight: 800; letter-spacing: 1.2px; opacity: 0.85; margin-top: 1px; white-space: nowrap; }
+        .money-bag {
+            width: 40px; height: 44px;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+        }
+        .money-bag svg { width: 100%; height: 100%; display: block; }
+        .money-plus.is-bag { font-size: 26px; color: #ffd700; text-shadow: 0 0 14px rgba(255, 215, 0, 0.8); }
+        .money-coin {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #fff8d6, #ffd700 45%, #b8860b 90%);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45), inset 0 0 0 2px rgba(184, 134, 11, 0.8), inset 0 0 0 4px rgba(255, 248, 214, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            color: #7a5200; font-weight: 900; font-size: 17px;
+        }
+        .money-plus {
+            position: fixed; z-index: 12; pointer-events: none;
+            transform: translate(-50%, -50%);
+            font-weight: 900; font-size: 20px; color: #4ade80;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
+            animation: moneyPlus 0.9s ease-out forwards;
+        }
+        @keyframes moneyPlus {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+            25% { opacity: 1; transform: translate(-50%, -80%) scale(1.15); }
+            100% { opacity: 0; transform: translate(-50%, -170%) scale(1); }
+        }
+
+        /* =========================================
+           WELCOME TITLE ANIMATION
+           ========================================= */
+        .welcome-chit-title { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans Telugu", "Segoe UI", Roboto, sans-serif; }
+        .wct-text { display: inline-block; perspective: 600px; }
+        .wct-ch, .wct-space { display: inline-block; }
+        .wct-space { width: 0.32em; }
+        .wct-ch {
+            opacity: 0;
+            transform: translateY(-0.9em) rotateX(80deg);
+            background: linear-gradient(100deg, #b8860b 0%, #ffd700 30%, #fff8d6 45%, #ffd700 60%, #d4a017 100%);
+            background-size: 300% 100%;
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; color: #ffd700;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.45));
+        }
+        .wct-hl { font-size: 1.12em; }
+        .welcome-chit-title.wct-play .wct-ch {
+            animation:
+                wctDrop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                wctShine 3.2s linear infinite;
+            animation-delay: calc(var(--i) * 45ms), calc(0.9s + var(--i) * 45ms);
+        }
+        @keyframes wctDrop {
+            0% { opacity: 0; transform: translateY(-0.9em) rotateX(80deg); }
+            70% { opacity: 1; transform: translateY(0.06em) rotateX(-8deg); }
+            100% { opacity: 1; transform: translateY(0) rotateX(0); }
+        }
+        @keyframes wctShine {
+            0% { background-position: 150% 0; }
+            100% { background-position: -150% 0; }
+        }
+        .wct-spark {
+            display: inline-block; color: #ffd700; font-size: 0.8em; margin: 0 0.35em;
+            opacity: 0; text-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
+            -webkit-text-fill-color: #ffd700;
+        }
+        .welcome-chit-title.wct-play .wct-spark { animation: wctSpark 2.4s ease-in-out 1s infinite; }
+        .welcome-chit-title.wct-play .wct-r { animation-delay: 2.2s; }
+        @keyframes wctSpark {
+            0%, 100% { opacity: 0.35; transform: scale(0.7) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.25) rotate(90deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .wct-ch { opacity: 1; transform: none; }
+            .welcome-chit-title.wct-play .wct-ch, .welcome-chit-title.wct-play .wct-spark { animation: none; opacity: 1; }
+        }
+        @media (max-width: 600px) {
+            .money-note { width: 80px; height: 40px; }
+            .mn-center b { font-size: 16px; }
+            .mn-center small { font-size: 6px; }
+            .money-bag { width: 34px; height: 38px; }
+            .money-coin { width: 28px; height: 28px; font-size: 14px; }
+        }
         /* =========================================
            HELP DESK
            ========================================= */
@@ -4870,6 +5041,9 @@
     </style>
 </head>
 <body data-on="false">
+<!-- Night sky (stars) + white lamp light, login screen only -->
+<canvas id="nightSky" aria-hidden="true"></canvas>
+<div id="lampGlow" aria-hidden="true"></div>
 
 <!-- Welcome Banner (Appears only when lamp turns ON) -->
 <div class="welcome-chit-title">✨ Welcome to 50k chit ✨</div>
@@ -5569,123 +5743,280 @@
         } catch(e){}
     }
 
+    // =========================================
+    // MONEY RAIN (falling notes & coins, tap to collect)
+    // Generic "50K CHIT" notes – not a copy of any real currency design.
+    // =========================================
+    // Indian-inspired colours only (lavender / yellow / stone-grey). No portrait, emblem,
+    // bank name, serial number or denomination – so it never resembles real currency.
+    const NOTE_VARIANTS = ['note-lavender', 'note-yellow', 'note-stone'];
+    const DIYA_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c2 2.4 2.7 4 2.2 5.6a2.3 2.3 0 0 1-4.4 0C9.3 6.5 10 4.9 12 2.5z" fill="#ff9f1c"/><path d="M12 5.2c.9 1.1 1.2 1.9 1 2.6a1 1 0 0 1-2 0c-.2-.7.1-1.5 1-2.6z" fill="#ffe08a"/><path d="M2.5 12.5h19c-.7 3.9-4.6 6.5-9.5 6.5s-8.8-2.6-9.5-6.5z" fill="currentColor"/><path d="M8 20.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    const BAG_SVG = '<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M14 4h12l-3 6h-6z" fill="#b8860b"/><path d="M15 10h10c9 5 13 13 13 20 0 8-7 12-18 12S2 38 2 30c0-7 4-15 13-20z" fill="url(#bagG)"/><path d="M14 10h12" stroke="#7a5200" stroke-width="2.5" stroke-linecap="round"/><text x="20" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#7a5200" font-family="Arial,sans-serif">₹</text><defs><radialGradient id="bagG" cx="35%" cy="35%" r="75%"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#f2c94c"/><stop offset="1" stop-color="#b8860b"/></radialGradient></defs></svg>';
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function playCoinSound() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            [1318, 1760].forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                const t = ctx.currentTime + i * 0.07;
+                osc.frequency.setValueAtTime(f, t);
+                gain.gain.setValueAtTime(0.0001, t);
+                gain.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(t); osc.stop(t + 0.3);
+            });
+        } catch(e) {}
+    }
+
+    function buildNoteEl() {
+        const el = document.createElement('div');
+        const r = Math.random();
+        if (r < 0.05) {                       // ~5% money bag
+            el.className = 'money-bag';
+            el.innerHTML = BAG_SVG;
+        } else if (r < 0.30) {                // ~25% gold coin
+            el.className = 'money-coin';
+            el.innerHTML = '<span>₹</span>';
+        } else {                              // ~70% notes
+            el.className = 'money-note ' + NOTE_VARIANTS[Math.floor(Math.random() * NOTE_VARIANTS.length)];
+            el.innerHTML = `
+                <span class="mn-corner">₹</span>
+                <span class="mn-seal">${DIYA_SVG}</span>
+                <span class="mn-center"><b>₹</b><small>50K CHIT</small></span>
+                <span class="mn-corner mn-r">₹</span>`;
+        }
+        return el;
+    }
+
     function createBalloon() {
-        if (!isOn) return;
-        if (balloonLayer.children.length >= 3) return; // Keep it clean & minimal (max 3)
-        const b = document.createElement('div');
-        const colorClass = balloonColors[Math.floor(Math.random() * balloonColors.length)];
-        b.className = `gas-balloon ${colorClass}`;
+        if (!isOn || prefersReducedMotion) return;
+        if (balloonLayer.children.length >= (window.innerWidth < 700 ? 4 : 7)) return;
+        const el = buildNoteEl();
+        const isCoin = el.classList.contains('money-coin') || el.classList.contains('money-bag');
+        const startX = Math.random() * 92 + 2;          // vw
+        const sway = (Math.random() * 10 + 6) * (Math.random() < 0.5 ? -1 : 1); // vw drift
+        const scale = Math.random() * 0.35 + (isCoin ? 0.75 : 0.85);
+        const spin = (Math.random() * 40 + 20) * (Math.random() < 0.5 ? -1 : 1);
+        const duration = (Math.random() * 5 + 9) * 1000; // 9–14s gentle fall
+        el.style.left = startX + 'vw';
+        el.style.top = '-14vh';
+        balloonLayer.appendChild(el);
 
-        // Random horizontal spawn position
-        const posX = Math.random() * 85 + 5; // 5vw to 90vw
-        b.style.left = posX + 'vw';
-        b.style.top = '105vh';
-
-        // Float duration & slight size variance
-        const duration = Math.random() * 6 + 9; // 9s to 15s
-        const scale = Math.random() * 0.35 + 0.85;
-        b.style.transform = `scale(${scale})`;
-
-        balloonLayer.appendChild(b);
-
-        // Smooth ascending movement
-        const anim = b.animate([
-            { top: '105vh', transform: `scale(${scale}) translateX(0px)` },
-            { top: '50vh', transform: `scale(${scale}) translateX(${Math.random() * 30 - 15}px)` },
-            { top: '-25vh', transform: `scale(${scale}) translateX(${Math.random() * 40 - 20}px)` }
-        ], {
-            duration: duration * 1000,
-            easing: 'linear'
-        });
-
-        // Double tap / Single tap detector
-        let lastTapTime = 0;
-        let tapTimeout = null;
-
-        function handleTap(e) {
-            e.stopPropagation();
-            const currentTime = new Date().getTime();
-            const tapGap = currentTime - lastTapTime;
-
-            if (tapGap < 320 && tapGap > 0) {
-                // DOUBLE TAP -> POP BURST!
-                clearTimeout(tapTimeout);
-                popBalloon(b);
-            } else {
-                // SINGLE TAP -> SWING / DEFLECT TO SIDE!
-                lastTapTime = currentTime;
-                tapTimeout = setTimeout(() => {
-                    deflectBalloon(b, anim);
-                }, 320);
-            }
+        // Flutter: sway left-right while slowly tilting, like a note falling through air
+        const frames = [];
+        for (let i = 0; i <= 8; i++) {
+            const k = i / 8;
+            const wave = Math.sin(k * Math.PI * 3);
+            frames.push({
+                offset: k,
+                transform: `translate(${sway * k + wave * 4}vw, ${k * 128}vh) rotate(${spin * wave}deg) rotateX(${isCoin ? 0 : wave * 55}deg) scale(${scale})`,
+                opacity: k > 0.92 ? (1 - k) * 12 : 1
+            });
         }
-
-        b.addEventListener('pointerdown', handleTap);
-
-        anim.onfinish = () => {
-            if (b.parentNode) b.remove();
-        };
+        const anim = el.animate(frames, { duration, easing: 'linear' });
+        el._anim = anim;
+        anim.onfinish = () => { if (el.parentNode) el.remove(); };
+        el.addEventListener('pointerdown', (e) => { e.stopPropagation(); popBalloon(el); });
     }
 
-    function deflectBalloon(b, anim) {
-        if (!b.parentNode) return;
-        const deflectDir = Math.random() > 0.5 ? 'balloon-deflect-right' : 'balloon-deflect-left';
-        b.classList.add(deflectDir);
-        // accelerate upwards
-        if (anim) {
-            anim.playbackRate = 2.5;
-        }
-    }
+    function deflectBalloon() {}
 
-    function popBalloon(b) {
-        if (!b.parentNode) return;
-        playPopSound();
-        b.classList.add('balloon-popping');
+    // Tap = collect: note zooms up, fades, and a "+₹" sparkle pops
+    function popBalloon(el) {
+        if (!el.parentNode || el.classList.contains('money-collected')) return;
+        playCoinSound();
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        if (el._anim) el._anim.pause();
+        const now = getComputedStyle(el).transform;
+        el.classList.add('money-collected');
+        el.animate([
+            { transform: now === 'none' ? 'none' : now, opacity: 1 },
+            { transform: (now === 'none' ? '' : now) + ' translateY(-40px) scale(1.35)', opacity: 0 }
+        ], { duration: 380, easing: 'ease-out', fill: 'forwards' });
 
-        // Sparkle burst particles
-        const rect = b.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
+        const isBag = el.classList.contains('money-bag');
+        const plus = document.createElement('div');
+        plus.className = 'money-plus' + (isBag ? ' is-bag' : '');
+        plus.textContent = isBag ? '+₹₹₹' : '+₹';
+        plus.style.left = cx + 'px';
+        plus.style.top = cy + 'px';
+        document.body.appendChild(plus);
+        setTimeout(() => plus.remove(), 900);
 
-        for (let i = 0; i < 8; i++) {
-            const p = document.createElement('div');
-            p.className = 'burst-particle';
-            p.style.background = '#ffd700';
-            p.style.left = centerX + 'px';
-            p.style.top = centerY + 'px';
-            document.body.appendChild(p);
-
-            const angle = (i / 8) * Math.PI * 2;
-            const dist = Math.random() * 60 + 30;
-            const destX = centerX + Math.cos(angle) * dist;
-            const destY = centerY + Math.sin(angle) * dist;
-
+        const nParticles = isBag ? 16 : 8;
+        for (let i = 0; i < nParticles; i++) {
+            const pt = document.createElement('div');
+            pt.className = 'burst-particle';
+            pt.style.background = i % 2 ? '#ffd700' : '#4ade80';
+            pt.style.left = cx + 'px';
+            pt.style.top = cy + 'px';
+            document.body.appendChild(pt);
+            const ang = (i / nParticles) * Math.PI * 2, dist = Math.random() * (isBag ? 80 : 50) + 30;
             setTimeout(() => {
-                p.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`;
-                p.style.opacity = '0';
+                pt.style.transform = `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist}px) scale(0)`;
+                pt.style.opacity = '0';
             }, 10);
-
-            setTimeout(() => p.remove(), 550);
+            setTimeout(() => pt.remove(), 550);
         }
-
-        setTimeout(() => {
-            if (b.parentNode) b.remove();
-        }, 150);
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 400);
     }
 
     function startBalloons() {
         balloonLayer.style.display = 'block';
         if (balloonInterval) clearInterval(balloonInterval);
-        // Spawn just 1 gentle balloon initially
-        setTimeout(createBalloon, 300);
-        // Gentle interval (every 4.5 seconds) so it stays calm and aesthetic
-        balloonInterval = setInterval(createBalloon, 4500);
+        if (prefersReducedMotion) return;
+        // a small first shower, then a calm steady drizzle
+        [150, 600, 1100].forEach(t => setTimeout(createBalloon, t));
+        balloonInterval = setInterval(createBalloon, 1500);
     }
 
     function stopBalloons() {
         balloonLayer.style.display = 'none';
         if (balloonInterval) clearInterval(balloonInterval);
         balloonLayer.innerHTML = '';
+    }
+
+    // =========================================
+    // NIGHT SKY: twinkling stars + occasional shooting star (canvas)
+    // =========================================
+    const sky = { c: null, ctx: null, stars: [], shoot: null, nextShoot: 0, dim: 1, w: 0, h: 0, dpr: 1 };
+
+    function setupSky() {
+        sky.c = document.getElementById('nightSky');
+        if (!sky.c) return;
+        sky.ctx = sky.c.getContext('2d');
+        resizeSky();
+        window.addEventListener('resize', () => { resizeSky(); positionLampGlow(); });
+        sky.nextShoot = performance.now() + 3000 + Math.random() * 5000;
+        if (prefersReducedMotion) { drawSky(performance.now(), true); return; }
+        requestAnimationFrame(skyLoop);
+    }
+
+    function resizeSky() {
+        if (!sky.c) return;
+        sky.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        sky.w = window.innerWidth; sky.h = window.innerHeight;
+        sky.c.width = sky.w * sky.dpr; sky.c.height = sky.h * sky.dpr;
+        sky.ctx.setTransform(sky.dpr, 0, 0, sky.dpr, 0, 0);
+        const count = Math.round(Math.min(260, Math.max(70, (sky.w * sky.h) / 5200)));
+        sky.stars = Array.from({ length: count }, () => {
+            const big = Math.random() < 0.08;
+            return {
+                x: Math.random() * sky.w,
+                y: Math.random() * sky.h * 0.92,
+                r: big ? Math.random() * 0.8 + 1.3 : Math.random() * 0.9 + 0.35,
+                a: Math.random() * 0.5 + 0.45,
+                sp: Math.random() * 1.6 + 0.6,
+                ph: Math.random() * Math.PI * 2,
+                big
+            };
+        });
+    }
+
+    function drawSky(t, still) {
+        const ctx = sky.ctx;
+        ctx.clearRect(0, 0, sky.w, sky.h);
+        // lamp light makes stars look fainter, like a real room light at night
+        const target = isOn ? 0.5 : 1;
+        sky.dim += (target - sky.dim) * 0.05;
+        for (const s of sky.stars) {
+            const tw = still ? 1 : 0.6 + 0.4 * Math.sin(t / 1000 * s.sp + s.ph);
+            const alpha = s.a * tw * sky.dim;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+            if (s.big) {
+                ctx.globalAlpha = alpha * 0.5;
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.6;
+                const l = s.r * 4 * tw;
+                ctx.beginPath(); ctx.moveTo(s.x - l, s.y); ctx.lineTo(s.x + l, s.y); ctx.moveTo(s.x, s.y - l); ctx.lineTo(s.x, s.y + l); ctx.stroke();
+                ctx.globalAlpha = alpha * 0.25;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        // shooting star
+        if (!still) {
+            if (!sky.shoot && t > sky.nextShoot) {
+                const fromLeft = Math.random() < 0.5;
+                sky.shoot = { x: fromLeft ? Math.random() * sky.w * 0.5 : sky.w * (0.5 + Math.random() * 0.5), y: Math.random() * sky.h * 0.35,
+                              vx: (fromLeft ? 1 : -1) * (7 + Math.random() * 4), vy: 2.6 + Math.random() * 1.6, life: 0 };
+            }
+            if (sky.shoot) {
+                const sh = sky.shoot;
+                sh.x += sh.vx; sh.y += sh.vy; sh.life++;
+                const fade = Math.max(0, 1 - sh.life / 70);
+                const g = ctx.createLinearGradient(sh.x, sh.y, sh.x - sh.vx * 14, sh.y - sh.vy * 14);
+                g.addColorStop(0, `rgba(255,255,255,${0.95 * fade * sky.dim})`);
+                g.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.globalAlpha = 1; ctx.strokeStyle = g; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(sh.x, sh.y); ctx.lineTo(sh.x - sh.vx * 14, sh.y - sh.vy * 14); ctx.stroke();
+                if (fade <= 0 || sh.x < -200 || sh.x > sky.w + 200 || sh.y > sky.h) {
+                    sky.shoot = null;
+                    sky.nextShoot = t + 6000 + Math.random() * 8000;
+                }
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    function skyLoop(t) {
+        if (!document.hidden && !document.body.classList.contains('portal-active')) drawSky(t, false);
+        requestAnimationFrame(skyLoop);
+    }
+
+    // Keep the white light centred on the lamp shade (works on any screen size / scroll)
+    function positionLampGlow() {
+        const g = document.getElementById('lampGlow');
+        const shade = document.querySelector('.lamp-shade');
+        if (!g || !shade) return;
+        const r = shade.getBoundingClientRect();
+        g.style.left = (r.left + r.width / 2 + window.scrollX) + 'px';
+        g.style.top = (r.top + r.height * 0.75 + window.scrollY) + 'px';
+    }
+
+    // =========================================
+    // WELCOME TITLE: letter-by-letter drop + gold shimmer
+    // =========================================
+    const WELCOME_TEXT = { en: 'Welcome to 50K Chit', te: '50K చిట్‌కి స్వాగతం' };
+
+    function splitGraphemes(str) {
+        try {
+            if (window.Intl && Intl.Segmenter) {
+                return Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(str), x => x.segment);
+            }
+        } catch(e) {}
+        return Array.from(str);
+    }
+
+    function renderWelcomeTitle() {
+        const host = document.querySelector('.welcome-chit-title');
+        if (!host) return;
+        const lang = (typeof currentLang !== 'undefined' && currentLang === 'te') ? 'te' : 'en';
+        const text = WELCOME_TEXT[lang];
+        let i = 0;
+        const letters = splitGraphemes(text).map(ch => {
+            if (ch === ' ') return '<span class="wct-space"> </span>';
+            const isNum = /[0-9K]/.test(ch) && /50K/.test(text);
+            return `<span class="wct-ch${isNum ? ' wct-hl' : ''}" style="--i:${i++}">${ch}</span>`;
+        }).join('');
+        host.setAttribute('data-no-i18n', '');
+        host.setAttribute('aria-label', text);
+        host.innerHTML = `<span class="wct-spark wct-l" aria-hidden="true">✦</span><span class="wct-text" aria-hidden="true">${letters}</span><span class="wct-spark wct-r" aria-hidden="true">✦</span>`;
+        replayWelcomeTitle();
+    }
+
+    function replayWelcomeTitle() {
+        const host = document.querySelector('.welcome-chit-title');
+        if (!host) return;
+        host.classList.remove('wct-play');
+        void host.offsetWidth;
+        host.classList.add('wct-play');
     }
 
     // Trigger native Google / Browser "Save Password" prompt
@@ -8865,7 +9196,9 @@
         root.style.setProperty('--on', isOn ? 1 : 0);
         
         if (lampAutoTimer) { clearTimeout(lampAutoTimer); lampAutoTimer = null; }
+        setTimeout(positionLampGlow, 50);
         if (isOn) {
+            replayWelcomeTitle();
             loginForm.classList.add('active');
             gsap.to(body, { backgroundColor: "#1c1f24", duration: 0.6 });
             startBalloons();
@@ -8900,6 +9233,7 @@
             tabReg.classList.add('active');
             updateRegSlotsInfo();
         }
+        setTimeout(positionLampGlow, 30);
     }
 
     function getStoredMembers() {
@@ -9273,6 +9607,7 @@
 
     function handleLogout() {
         clearSession();
+        setTimeout(positionLampGlow, 120);
         passbookViewUser = '';
         profileViewUser = '';
         closeAuctionChat();
@@ -10056,6 +10391,7 @@
         const activeNav = document.querySelector('.nav-btn.active');
         if (activeNav && typeof updatePill === 'function') setTimeout(() => updatePill(activeNav, false), 30);
         if (typeof isHelpOpen === 'function' && isHelpOpen()) renderHelpDesk();
+        renderWelcomeTitle();
     }
 
     function toggleLanguage() {
@@ -10069,6 +10405,10 @@
     (function initAuthOnLoad() {
         i18nObserver.observe(document.body, { childList: true, subtree: true });
         if (currentLang === 'te') applyLanguage('te'); else applyLanguage('en');
+        renderWelcomeTitle();
+        setupSky();
+        positionLampGlow();
+        setTimeout(positionLampGlow, 400);
         if (restoreSession()) return;
         lampAutoTimer = setTimeout(() => {
             const authVisible = document.getElementById('authContainer').style.display !== 'none';

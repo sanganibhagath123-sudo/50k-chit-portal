@@ -1,7 +1,7 @@
 // 50K Chit Portal – service worker
 // Network-first: members always get the latest version; cached copy is used only when offline.
-const CACHE = 'chit-portal-v1';
-const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE = 'chit-portal-v2';
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

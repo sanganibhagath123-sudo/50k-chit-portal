@@ -18,9 +18,9 @@ LAPTOP LO TEST
 
 KOTHA VERSION UPDATE
 - GitHub lo kotha files upload chesthe chalu. App DELETE / REINSTALL avasaram ledu.
-- GitHub Pages ki 1-2 nimishalu padutundi. Tarvata:
-    * Sign-in screen lo unte app taane reload ayi kotha version vastundi.
-    * Login ayi unte paina "🆕 New version available → Update now" vastundi. Nokkithe chalu (logout avvaru).
-    * App close chesi malli open chesina kotha version ne open avtundi.
+- GitHub Pages ki 1-2 nimishalu padutundi. Tarvata members app open chesthe / app ki tirigi vasthe:
+    * "🆕 New version available – Please update the app to continue" screen vastundi.
+    * "Update now" nokkevaraku app pani cheyyadu. Nokkagane latest version open avtundi (logout avvaru).
+- App ni close chesi kotha ga open chesthe direct ga latest version ne open avtundi.
 - App ICON / PERU maarchinappudu matrame: Android lo 1 roju varaku paata icon kanipinchavachu;
   iPhone lo icon maarchali ante remove chesi malli "Add to Home Screen" cheyyali.

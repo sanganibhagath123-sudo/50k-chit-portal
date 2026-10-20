@@ -104,3 +104,17 @@ MUKHYAMAINA VISHAYALU
 - firebase-config.js lo apiKey public ga undatam safe. Gmail password / service account
   keys maatram evariki ivvakandi.
 - firebase-config.js lo apiKey khaali chesthe app malli offline demo mode lo (okka device) nadustundi.
+
+
+SAMASYALU (TROUBLESHOOTING)
+----------------------------
+"This username is taken" (kotha group lo, mundu evaru register avvakunda):
+   -> Mundu try lo sagam entry migilindi. Firestore -> Data -> members -> aa username document
+      -> ⋮ -> Delete document. (logins lo unte adi kooda delete.)
+      Authentication -> Users lo aa member email row unte -> ⋮ -> Delete account. Tarvata malli Register.
+"Server setup is not finished: ... security rules ...":
+   -> Firestore -> Rules lo kotha firestore.rules paste -> Publish. Malli try.
+"The Firebase database is not ready yet":
+   -> Part A2 (Create database) cheyyaledhu. Adi cheyyandi.
+"Incorrect username or password" (paata version lo register ayina vaallu):
+   -> Okkasari username badulu EMAIL tho sign in avvandi. Tarvata nunchi username tho pani chestundi.

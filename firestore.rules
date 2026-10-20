@@ -1,23 +1,6 @@
 rules_version = '2';
-
-// =====================================================================
-// 50K CHIT PORTAL – Firestore Security Rules
-// Paste this whole file into: Firebase Console → Firestore Database → Rules → Publish
-//
-// Who is who:
-//   admins/{uid}      → Bhagath (created by hand in the Console, see SETUP guide)
-//   users/{uid}       → { username }   (links a login to a member name)
-//   logins/{name}     → { email, hasEmail, uid }  (username sign-in lookup)
-//   members/{name}    → { uid, username, status: pending|approved|rejected, role }
-//   shared/coadmins   → { map: { name: { payments, auction, members } } }
-// Private per member: profiles/{name}, payments/{name}, passbook/{name}, surety/{name}
-// Shared for the group: shared/{auction|history|month|schedule|banner|qr|announcements|board|public}
-// Live chat: chat/{messageId}
-// =====================================================================
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // ---------- helpers ----------
     function signedIn() { return request.auth != null; }
     function myName() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username;
@@ -28,7 +11,6 @@ service cloud.firestore {
     function isAdmin() {
       return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
-    // this login is the member's CURRENT login (an old login stops working after a password reset)
     function currentLogin() {
       return hasProfile() &&
         get(/databases/$(database)/documents/members/$(myName())).data.uid == request.auth.uid;
@@ -43,24 +25,17 @@ service cloud.firestore {
         get(/databases/$(database)/documents/shared/coadmins).data.map
           .get(myName(), {}).get(perm, false) == true;
     }
-    // Bhagath, or a co-admin who was given this permission
     function staff(perm) { return isAdmin() || coPerm(perm); }
     function isOwner(name) { return currentLogin() && myName() == name; }
-
-    // A member may only change their OWN board entries, and only to "submitted"
     function selfBoardKeys(changed) {
       return changed.hasOnly(['pay_' + myName(), 'sr_' + myName()])
         && (!(('pay_' + myName()) in changed) || request.resource.data['pay_' + myName()] == 'submitted')
         && (!(('sr_' + myName()) in changed) || request.resource.data['sr_' + myName()] == 'submitted');
     }
-
-    // ---------- admins: read-only from the app ----------
     match /admins/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
-      allow write: if false;            // only via Firebase Console
+      allow write: if false;
     }
-
-    // ---------- users/{uid} → username link ----------
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow create: if signedIn() && request.auth.uid == uid
@@ -68,26 +43,19 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/members/$(request.resource.data.username)).data.uid == request.auth.uid;
       allow update, delete: if false;
     }
-
-    // ---------- members (names + approval status; no passwords) ----------
     match /members/{name} {
       allow read: if signedIn();
-      // Self sign-up: always starts as "pending"
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.username == name
         && request.resource.data.status == 'pending'
         && (request.resource.data.role == 'member'
             || (request.resource.data.role == 'organizer' && name == 'bhagath'));
-      // Approve / reject: Bhagath or co-admin with "members" permission.
-      // Bhagath can also approve his own record on first login.
       allow update: if isAdmin()
         || (staff('members')
             && request.resource.data.diff(resource.data).affectedKeys()
                  .hasOnly(['status', 'approvedAt', 'updatedAt', 'resetUntil'])
             && resource.data.role != 'organizer');
-      // Password reset: after Bhagath presses "Reset Password" (valid 24 h) the member
-      // registers again with the SAME username → the new login takes over this record.
       allow update: if signedIn()
         && resource.data.role != 'organizer'
         && resource.data.get('resetUntil', 0) > request.time.toMillis()
@@ -95,13 +63,12 @@ service cloud.firestore {
         && request.resource.data.get('resetUntil', 0) == 0
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['uid', 'resetUntil', 'updatedAt']);
-      allow delete: if isAdmin();
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid && resource.data.status == 'pending');
     }
-
-    // ---------- logins/{username} → hidden sign-in email (lets members sign in with a username) ----------
     match /logins/{name} {
-      allow get: if true;               // needed on the sign-in screen (before login)
-      allow list: if false;             // nobody can download the whole list
+      allow get: if true;
+      allow list: if false;
       allow create, update: if signedIn()
         && request.resource.data.keys().hasOnly(['email', 'hasEmail', 'uid'])
         && request.resource.data.uid == request.auth.uid
@@ -109,31 +76,22 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/members/$(name)).data.uid == request.auth.uid;
       allow delete: if isAdmin();
     }
-
-    // ---------- private: profile (name, phone, UPI, nominee, email) ----------
     match /profiles/{name} {
       allow read: if isOwner(name) || isAdmin() || staff('members');
       allow write: if isOwner(name) || isAdmin();
     }
-
-    // ---------- private: this month's payment ----------
     match /payments/{name} {
       allow read: if isOwner(name) || staff('payments');
-      // Member can only say "I have paid" (submitted), never "verified"
       allow create, update: if (isOwner(name) && approved()
             && request.resource.data.status == 'submitted'
             && (resource == null || resource.data.status != 'verified'))
         || (staff('payments') && (isAdmin() || name != myName()));
       allow delete: if staff('payments') || staff('auction');
     }
-
-    // ---------- private: month-wise passbook (written when verified) ----------
     match /passbook/{name} {
       allow read: if isOwner(name) || staff('payments');
       allow write: if staff('payments') && (isAdmin() || name != myName());
     }
-
-    // ---------- private: surety (guarantor) ----------
     match /surety/{name} {
       allow read: if isOwner(name) || isAdmin();
       allow create, update: if (isOwner(name) && approved()
@@ -142,8 +100,6 @@ service cloud.firestore {
         || isAdmin();
       allow delete: if isAdmin();
     }
-
-    // ---------- live chat messages ----------
     match /chat/{msgId} {
       allow read: if approved();
       allow create: if approved()
@@ -153,27 +109,16 @@ service cloud.firestore {
       allow delete: if staff('auction');
       allow update: if false;
     }
-
-    // ---------- shared group documents ----------
     match /shared/{docId} {
       allow read: if approved() || (docId == 'public');
-
-      // Live auction state, results, next date: any approved member's app updates these
       allow write: if approved() && docId in ['auction', 'history', 'schedule'];
-
-      // Month counter: Bhagath / co-admin (auction)
       allow write: if staff('auction') && docId == 'month';
-
-      // Banner, QR, announcements, co-admin list, public contact: Bhagath only
       allow write: if isAdmin() && docId in ['banner', 'qr', 'announcements', 'coadmins', 'public'];
-
-      // Status board (who paid / surety status) – shown to everyone, no amounts
       allow write: if docId == 'board' && (staff('payments') || staff('auction'));
       allow create: if docId == 'board' && approved()
         && selfBoardKeys(request.resource.data.keys().toSet());
       allow update: if docId == 'board' && approved()
         && selfBoardKeys(request.resource.data.diff(resource.data).affectedKeys());
     }
-
   }
 }

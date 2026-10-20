@@ -4274,6 +4274,71 @@
         .btn-pb-report:hover { background: #ffd700; color: #0b0c10; }
         [data-theme="light"] .btn-pb-report { color: #b8860b; }
 
+        .lob-cd { margin: 4px 0 14px; padding: 14px; border-radius: 16px; text-align: center;
+            background: rgba(255, 215, 0, 0.06); border: 1px solid rgba(255, 215, 0, 0.3); }
+        .lob-cd.is-live { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.5); }
+        .lob-cd-label { font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #fde68a; }
+        .lob-cd.is-live .lob-cd-label { color: #4ade80; font-size: 14px; letter-spacing: 0.4px; text-transform: none; }
+        .lob-cd-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 360px; margin: 10px auto 8px; }
+        .lob-cd-grid div { padding: 8px 4px; border-radius: 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); }
+        .lob-cd-grid b { display: block; font-size: 24px; font-weight: 900; color: #ffd700; font-variant-numeric: tabular-nums; }
+        .lob-cd-grid small { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
+        .lob-cd-when { font-size: 12.5px; color: #cbd5e1; }
+        [data-theme="light"] .lob-cd-grid div { background: #fff; border-color: #e2e8f0; }
+        [data-theme="light"] .lob-cd-grid b { color: #b45309; }
+        [data-theme="light"] .lob-cd-label { color: #92400e; }
+        [data-theme="light"] .lob-cd-when { color: #334155; }
+        .ups-modal { position: fixed; inset: 0; z-index: 100002; background: rgba(2, 6, 23, 0.72); place-items: center; padding: 16px; }
+        .ups-card { position: relative; width: min(420px, 100%); background: linear-gradient(180deg, #161b2e, #0f1424); color: #f1f5f9;
+            border: 1px solid rgba(255, 215, 0, 0.35); border-radius: 20px; padding: 22px 18px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .ups-x { position: absolute; top: 10px; right: 12px; border: 0; background: transparent; color: #94a3b8; font-size: 18px; cursor: pointer; }
+        .ups-title { font-weight: 800; font-size: 15px; color: #cbd5e1; text-align: center; }
+        .ups-amount { font-size: 38px; font-weight: 900; text-align: center; color: #ffd700; margin: 4px 0 14px; letter-spacing: -0.5px; }
+        .ups-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; margin-bottom: 8px;
+            border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
+        .ups-row small { display: block; font-size: 11px; color: #94a3b8; }
+        .ups-row b { font-size: 14px; word-break: break-all; }
+        .ups-row button { flex: none; border: 1px solid rgba(255,215,0,0.5); background: transparent; color: #ffd700; border-radius: 999px; padding: 6px 14px; font-weight: 700; cursor: pointer; }
+        .ups-copied { min-height: 18px; font-size: 12px; color: #4ade80; text-align: center; margin: 2px 0 8px; }
+        .ups-open { width: 100%; border: 0; border-radius: 14px; padding: 14px; font-size: 16px; font-weight: 800; cursor: pointer; color: #fff;
+            background: linear-gradient(135deg, #5f259f, #7b3fe4); box-shadow: 0 8px 24px rgba(95,37,159,0.45); }
+        .ups-steps { margin: 14px 0 0; padding-left: 20px; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; }
+        [data-theme="light"] .ups-card { background: #fff; color: #0f172a; }
+        [data-theme="light"] .ups-steps, [data-theme="light"] .ups-title { color: #334155; }
+        [data-theme="light"] .ups-amount { color: #b45309; }
+        [data-theme="light"] .ups-row { background: #f8fafc; border-color: #e2e8f0; }
+        #winnerCelebration { position: fixed; inset: 0; z-index: 100003; background: radial-gradient(ellipse at center, rgba(30, 20, 60, 0.82), rgba(2, 4, 14, 0.94)); }
+        #wcCanvas { position: absolute; inset: 0; pointer-events: none; }
+        .wc-card { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(400px, calc(100vw - 32px)); text-align: center;
+            padding: 26px 20px 20px; border-radius: 24px; color: #fff; background: linear-gradient(160deg, rgba(60, 40, 5, 0.92), rgba(20, 14, 40, 0.92));
+            border: 1.5px solid rgba(255, 215, 0, 0.65); box-shadow: 0 0 60px rgba(255, 200, 0, 0.35), 0 20px 60px rgba(0,0,0,0.6); }
+        #winnerCelebration.wc-in .wc-card { animation: wcPop .7s cubic-bezier(.2,1.4,.4,1) both; }
+        #winnerCelebration.wc-in .wc-trophy { animation: wcTrophy 1.6s ease-in-out infinite; }
+        @keyframes wcPop { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+        @keyframes wcTrophy { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+        .wc-trophy { font-size: 64px; line-height: 1; filter: drop-shadow(0 6px 18px rgba(255, 200, 0, 0.6)); }
+        .wc-month { margin-top: 10px; font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fde68a; }
+        .wc-name { font-size: 36px; font-weight: 900; margin: 4px 0 14px; background: linear-gradient(90deg, #fff7cc, #ffd700, #ffb703);
+            -webkit-background-clip: text; background-clip: text; color: transparent; word-break: break-word; }
+        .wc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .wc-stats div { padding: 10px 6px; border-radius: 14px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); }
+        .wc-stats small { display: block; font-size: 10.5px; color: #cbd5e1; }
+        .wc-stats b { font-size: 16px; color: #ffd700; }
+        .wc-msg { margin: 14px 0 16px; font-size: 14px; color: #f1f5f9; line-height: 1.45; }
+        .wc-close { border: 0; border-radius: 999px; padding: 12px 34px; font-weight: 800; font-size: 15px; cursor: pointer; color: #1f1300;
+            background: linear-gradient(135deg, #ffe066, #ffb703); box-shadow: 0 8px 24px rgba(255, 183, 3, 0.4); }
+        @media (prefers-reduced-motion: reduce) { #winnerCelebration.wc-in .wc-card, #winnerCelebration.wc-in .wc-trophy { animation: none; } }
+        .update-gate { position: fixed; inset: 0; z-index: 2147483000; place-items: center; padding: 16px;
+            background: radial-gradient(ellipse at center, rgba(20, 24, 45, 0.96), rgba(2, 4, 12, 0.98)); }
+        .ug-card { width: min(380px, 100%); text-align: center; padding: 28px 22px 22px; border-radius: 22px; color: #f8fafc;
+            background: linear-gradient(160deg, #1b2036, #10142a); border: 1px solid rgba(250, 204, 21, 0.5); box-shadow: 0 20px 60px rgba(0,0,0,0.55); }
+        .ug-icon { font-size: 52px; line-height: 1; }
+        .ug-title { margin-top: 10px; font-size: 22px; font-weight: 900; color: #ffd700; }
+        .ug-text { margin: 8px 0 18px; font-size: 15px; color: #e2e8f0; }
+        .ug-btn { width: 100%; border: 0; border-radius: 14px; padding: 14px; font-size: 16px; font-weight: 900; cursor: pointer; color: #111827;
+            background: linear-gradient(135deg, #ffe066, #facc15); box-shadow: 0 8px 24px rgba(250, 204, 21, 0.35); }
+        .ug-btn:disabled { opacity: 0.7; cursor: progress; }
+        .ug-note { margin: 12px 0 0; font-size: 12px; color: #94a3b8; }
         .update-bar { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 100001;
             align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 8px 10px 8px 14px; border-radius: 999px;
             background: rgba(17, 24, 39, 0.96); color: #f9fafb; border: 1px solid rgba(250, 204, 21, 0.55);
@@ -5141,7 +5206,7 @@
                         <div class="quick-presets-row">
                             <button type="button" class="preset-btn" onclick="applyPostponePreset(1)">+1 Day Postpone</button>
                             <button type="button" class="preset-btn" onclick="applyPostponePreset(3)">+3 Days Postpone</button>
-                            <button type="button" class="preset-btn" onclick="applyPostponePreset(7)">+1 Week (Next Sunday)</button>
+                            <button type="button" class="preset-btn" onclick="applyPostponePreset(7)">+1 Week</button>
                         </div>
                     </div>
 
@@ -5157,13 +5222,13 @@
                         </div>
                         <div class="postpone-input-group" style="grid-column: 1 / -1;">
                             <label>Postpone Reason / Notice (Optional)</label>
-                            <input type="text" id="adminPostponeReason" class="postpone-input" placeholder="e.g. Postponed to next Sunday due to Holiday" />
+                            <input type="text" id="adminPostponeReason" class="postpone-input" placeholder="e.g. Postponed by one week due to a holiday" />
                         </div>
                     </div>
 
                     <!-- Actions -->
                     <div class="postpone-actions-row">
-                        <button type="button" class="btn-postpone-reset" onclick="resetCustomAuctionSchedule()">Reset to Default (Sunday 7 PM)</button>
+                        <button type="button" class="btn-postpone-reset" onclick="resetCustomAuctionSchedule()">Reset to Default (5th, 8 PM)</button>
                         <button type="button" class="btn-postpone-save" onclick="saveCustomAuctionSchedule(document.getElementById('adminAuctionDate').value, document.getElementById('adminAuctionTime').value, document.getElementById('adminPostponeReason').value)">
                             Update & Postpone Auction
                         </button>
@@ -5302,6 +5367,48 @@
 </div>
 
 <!-- Member Payment QR Scanner Modal (opened from Home first grid) -->
+<!-- UPI pay sheet -->
+<div id="upiPaySheet" class="ups-modal" style="display: none;" onclick="if (event.target === this) closeUpiPaySheet()">
+    <div class="ups-card" role="dialog" aria-label="Pay with UPI">
+        <button type="button" class="ups-x" onclick="closeUpiPaySheet()" aria-label="Close">✕</button>
+        <div class="ups-title">Pay Bhagath</div>
+        <div class="ups-amount" id="upsAmount">₹0</div>
+        <div class="ups-row">
+            <div><small>UPI ID</small><b id="upsUpi">-</b></div>
+            <button type="button" onclick="upsCopy('upi')">Copy</button>
+        </div>
+        <div class="ups-row">
+            <div><small>Amount</small><b>Enter this amount in the app</b></div>
+            <button type="button" onclick="upsCopy('amount')">Copy</button>
+        </div>
+        <div class="ups-copied" id="upsCopied"></div>
+        <button type="button" class="ups-open" id="upsOpenBtn" onclick="upsOpenApp()">Open PhonePe →</button>
+        <ol class="ups-steps">
+            <li><span id="upsAppName">PhonePe</span> opens with Bhagath’s UPI ID.</li>
+            <li>Type the amount shown above and pay.</li>
+            <li>If it shows an error: open the app yourself → <b>To UPI ID</b> → paste the copied ID → pay.</li>
+            <li>Come back here, tap <b>I Have Paid</b> and enter the 12-digit UTR.</li>
+        </ol>
+    </div>
+</div>
+
+<!-- Winner celebration -->
+<div id="winnerCelebration" style="display: none;">
+    <canvas id="wcCanvas"></canvas>
+    <div class="wc-card" role="dialog" aria-label="Auction winner">
+        <div class="wc-trophy">🏆</div>
+        <div class="wc-month" id="wcMonth">Auction Winner</div>
+        <div class="wc-name" id="wcName">-</div>
+        <div class="wc-stats">
+            <div><small>Bid discount</small><b id="wcBid">₹0</b></div>
+            <div><small>Take-home</small><b id="wcPrize">₹0</b></div>
+            <div><small>Dividend each</small><b id="wcDiv">₹0</b></div>
+        </div>
+        <p class="wc-msg" id="wcMsg"></p>
+        <button type="button" class="wc-close" onclick="closeWinnerCelebration()">Close</button>
+    </div>
+</div>
+
 <div id="userPayQrModal" onclick="if (event.target === this) closePayQrModal()">
     <div class="qr-modal-card">
         <div class="qr-modal-top">
@@ -5393,7 +5500,7 @@
             <button class="modal-close-icon" onclick="closeAdminNoticeModal()">&times;</button>
         </div>
         <textarea id="noticeInputText" class="admin-textarea" placeholder="Enter notice alerts separated by commas..."></textarea>
-        <p class="modal-hint-text">💡 Separate each notice with a comma (,). E.g: <i>Auction on Sunday 7:00 PM, Monthly Due target 10th</i></p>
+        <p class="modal-hint-text">💡 Separate each notice with a comma (,). E.g: <i>Auction on 5th 8:00 PM, Monthly Due target 10th</i></p>
         <div class="modal-action-btns">
             <button class="btn-modal-cancel" onclick="closeAdminNoticeModal()">Cancel</button>
             <button class="btn-modal-save" onclick="saveAdminNoticeModal()">Update Live Notice</button>
@@ -5538,13 +5645,13 @@
             <!-- Sliding Announcements Ticker (Clean as before) -->
             <div class="announcement-ticker-container">
                 <div class="ticker-track" id="announcementTrack">
-                    <span class="ticker-item"><i class='bx bxs-megaphone'></i> Month 01 Auction Scheduled on Sunday 7:00 PM</span>
+                    <span class="ticker-item"><i class='bx bxs-megaphone'></i> Month 01 Auction on the 5th @ 8:00 PM</span>
                     <span class="ticker-dot"></span>
                     <span class="ticker-item"><i class='bx bxs-badge-check'></i> 50K Chit Group • 20 Members Enrolled</span>
                     <span class="ticker-dot"></span>
                     <span class="ticker-item"><i class='bx bxs-calendar'></i> Monthly Due Target: 10th of every month</span>
                     <span class="ticker-dot"></span>
-                    <span class="ticker-item"><i class='bx bxs-megaphone'></i> Month 01 Auction Scheduled on Sunday 7:00 PM</span>
+                    <span class="ticker-item"><i class='bx bxs-megaphone'></i> Month 01 Auction on the 5th @ 8:00 PM</span>
                     <span class="ticker-dot"></span>
                     <span class="ticker-item"><i class='bx bxs-badge-check'></i> 50K Chit Group • 20 Members Enrolled</span>
                     <span class="ticker-dot"></span>
@@ -5681,10 +5788,14 @@
 </div>
 
 <!-- New version banner -->
-<div id="updateBar" class="update-bar" style="display: none;">
-    <span>🆕 New version available</span>
-    <button type="button" class="ub-go" onclick="applyAppUpdate()">Update now</button>
-    <button type="button" class="ub-x" onclick="dismissAppUpdate()" aria-label="Close">✕</button>
+<div id="updateGate" class="update-gate" style="display: none;" role="dialog" aria-modal="true" aria-label="Update required">
+    <div class="ug-card">
+        <div class="ug-icon">🆕</div>
+        <div class="ug-title">New version available</div>
+        <p class="ug-text">Please update the app to continue.</p>
+        <button type="button" class="ug-btn" id="ugBtn" onclick="applyAppUpdate()">Update now</button>
+        <p class="ug-note">Your data is safe. You stay signed in.</p>
+    </div>
 </div>
 
 <!-- GSAP for cute lamp cord pull -->
@@ -6112,6 +6223,12 @@
             return false;
         }
         FB.user = user; FB.uid = user.uid; FB.username = username; FB.isAdmin = isAdmin;
+        try {
+            const ls = await F.getDoc(F.doc(db, 'logins', username));
+            if (!ls.exists() || ls.data().uid !== user.uid || ls.data().email !== user.email) {
+                await F.setDoc(F.doc(db, 'logins', username), { email: user.email, hasEmail: !/@[^@]*firebaseapp\.com$/.test(user.email || '') || !!(ls.exists() && ls.data().hasEmail), uid: user.uid });
+            }
+        } catch(e) {}
         fbClearCache();
         fbAttach();
         if (isAdmin) {
@@ -6219,7 +6336,7 @@
         if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
         const F = FB.F, db = FB.db;
         const authEmail = email || fbHiddenEmail(u);
-        let cred = null, claimed = false;
+        let cred = null, claimed = false, createdMember = false;
         try {
             cred = await FB.A.createUserWithEmailAndPassword(FB.auth, authEmail, p);
             const uid = cred.user.uid;
@@ -6243,6 +6360,7 @@
                     uid, username: u, status: 'pending', role,
                     createdAt: fbToday(), requestedAt: Date.now()
                 });
+                createdMember = true;
             }
             await F.setDoc(F.doc(db, 'users', uid), { username: u });
             await F.setDoc(F.doc(db, 'logins', u), { email: authEmail, hasEmail: !!email, uid });
@@ -6254,11 +6372,16 @@
             await F.setDoc(F.doc(db, 'profiles', u), { json: JSON.stringify(prof), by: u, at: F.serverTimestamp() });
             await FB.A.signOut(FB.auth);
         } catch(e) {
+            console.warn('[firebase] register failed', e);
+            // undo a half-finished sign-up so the username is free to try again
+            if (createdMember) { try { await F.deleteDoc(F.doc(db, 'members', u)); } catch(_) {} }
             if (cred && cred.user) { try { await cred.user.delete(); } catch(_) {} }
             try { await FB.A.signOut(FB.auth); } catch(_) {}
             if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
             if (e && e.code === 'app/full') return showAuthMsg('registerMsg', 'Sorry, all 20 slots are full.');
-            if (e && (e.code === 'app/taken' || e.code === 'permission-denied')) return showAuthMsg('registerMsg', 'This username is taken. Please try another one.');
+            if (e && e.code === 'app/taken') return showAuthMsg('registerMsg', 'This username is taken. Please try another one.');
+            if (e && e.code === 'permission-denied') return showAuthMsg('registerMsg', 'Server setup is not finished: the latest security rules are not published in Firebase. Please ask Bhagath (Firestore → Rules → Publish) and try again.');
+            if (e && /failed-precondition|not-found|unavailable/.test(e.code || '')) return showAuthMsg('registerMsg', 'The Firebase database is not ready yet (Firestore → Create database). Please try again after setup.');
             if (e && e.code === 'auth/email-already-in-use') return showAuthMsg('registerMsg', 'This email is already used by another account. Use “Forgot password?” on the Sign In tab, or leave Email empty.');
             return showAuthMsg('registerMsg', fbAuthErrorText(e));
         }
@@ -6719,7 +6842,7 @@
     // ANNOUNCEMENTS DATA & ENGINE
     // =========================================
     const defaultAnnouncements = [
-        "Month 01 Auction Scheduled on Sunday 7:00 PM",
+        "Month 01 Auction on the 5th @ 8:00 PM",
         "50K Chit Group • 20 Members Enrolled",
         "Monthly Due Target: 10th of every month"
     ];
@@ -6789,33 +6912,176 @@
     // =========================================
     const CHIT_UPI_ID = "bhagath500@ybl"; // Bhagath's Chit UPI ID
 
+    // =========================================
+    // UPI PAY SHEET
+    // PhonePe / GPay often block pay-links that carry an amount to a personal UPI ID
+    // ("Something went wrong"). So: copy the UPI ID + show the amount, then open the app
+    // with the UPI ID only (same as scanning Bhagath's QR) – the member types the amount.
+    // =========================================
+    function getPayUpiId() {
+        const qr = (typeof getPaymentQrData === 'function') ? getPaymentQrData() : null;
+        return (qr && qr.upiId) ? qr.upiId : CHIT_UPI_ID;
+    }
+    function upiAppUrl(mode) {
+        const q = `pa=${encodeURIComponent(getPayUpiId())}&pn=${encodeURIComponent('Bhagath')}&cu=INR`;
+        if (mode === 'phonepe') return `phonepe://pay?${q}`;
+        if (mode === 'gpay') return `tez://upi/pay?${q}`;
+        return `upi://pay?${q}`;
+    }
+    function copyText(t) {
+        try { if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).catch(() => {}); } catch(e) {}
+        return Promise.resolve();
+    }
     function triggerUpiPayment(mode, dueAmount) {
-        const amount = String(Math.max(0, Math.round(Number(dueAmount) || getUserDueAmount(getChatActiveUser()).due)));
-        const note = `Month${pbPad(getCurrentChitMonth())}_50K_Chit`;
-        let url = "";
+        const amount = Math.max(0, Math.round(Number(dueAmount) || getUserDueAmount(getChatActiveUser()).due));
+        const id = getPayUpiId();
+        copyText(id);
+        const appName = mode === 'phonepe' ? 'PhonePe' : (mode === 'gpay' ? 'Google Pay' : 'UPI app');
+        const m = document.getElementById('upiPaySheet');
+        if (!m) return;
+        m.dataset.mode = mode || 'upi';
+        document.getElementById('upsAmount').innerText = '₹' + amount.toLocaleString('en-IN');
+        document.getElementById('upsAmount').dataset.amt = String(amount);
+        document.getElementById('upsUpi').innerText = id;
+        document.getElementById('upsOpenBtn').innerText = `Open ${appName} →`;
+        document.getElementById('upsAppName').innerText = appName;
+        document.getElementById('upsCopied').innerText = '✅ UPI ID copied';
+        m.style.display = 'grid';
+    }
+    function closeUpiPaySheet() { const m = document.getElementById('upiPaySheet'); if (m) m.style.display = 'none'; }
+    function upsCopy(what) {
+        const amt = document.getElementById('upsAmount').dataset.amt || '';
+        copyText(what === 'amount' ? amt : getPayUpiId());
+        document.getElementById('upsCopied').innerText = what === 'amount' ? '✅ Amount copied' : '✅ UPI ID copied';
+    }
+    function upsOpenApp() {
+        const m = document.getElementById('upiPaySheet');
+        copyText(getPayUpiId());
+        window.location.href = upiAppUrl((m && m.dataset.mode) || 'upi');
+    }
 
-        if (mode === 'phonepe') {
-            url = `phonepe://pay?pa=${CHIT_UPI_ID}&pn=Bhagath&am=${amount}&cu=INR&tn=${note}`;
-        } else if (mode === 'gpay') {
-            url = `gpay://upi/pay?pa=${CHIT_UPI_ID}&pn=Bhagath&am=${amount}&cu=INR&tn=${note}`;
-        } else {
-            url = `upi://pay?pa=${CHIT_UPI_ID}&pn=Bhagath&am=${amount}&cu=INR&tn=${note}`;
+    // =========================================
+    // WINNER CELEBRATION (fireworks) – shown on EVERY member's screen
+    // =========================================
+    let celebrateShownKey = '';
+    function maybeCelebrateWinner(st) {
+        if (!st || !st.winner || !st.wonAt) return;
+        if (Date.now() - st.wonAt > 15 * 60 * 1000) return; // only right after the auction
+        const portal = document.getElementById('portalScreen');
+        if (!portal || portal.style.display !== 'block') return;
+        const key = (st.wonMonth || '') + '|' + st.winner + '|' + st.wonAt;
+        if (celebrateShownKey === key) return;
+        let seen = '';
+        try { seen = localStorage.getItem('chit_celebrated') || ''; } catch(e) {}
+        if (seen === key) { celebrateShownKey = key; return; }
+        celebrateShownKey = key;
+        try { localStorage.setItem('chit_celebrated', key); } catch(e) {}
+        showWinnerCelebration({
+            winner: st.winner, month: st.wonMonth || getCurrentChitMonth(), bid: st.currentBid || 0,
+            takeHome: st.winnerPrize || 0, dividend: st.dividend || 0
+        });
+    }
+
+    let fwRaf = null, fwParts = [], fwRockets = [], fwLast = 0, fwEnd = 0;
+    function showWinnerCelebration(d) {
+        const ov = document.getElementById('winnerCelebration');
+        if (!ov) return;
+        const me = (getChatActiveUser() || '').toLowerCase();
+        const isMe = me && me === String(d.winner).toLowerCase();
+        document.getElementById('wcMonth').innerText = `Month ${pbPad(d.month)} Auction Winner`;
+        document.getElementById('wcName').innerText = d.winner;
+        document.getElementById('wcBid').innerText = '₹' + Number(d.bid).toLocaleString('en-IN');
+        document.getElementById('wcPrize').innerText = '₹' + Number(d.takeHome).toLocaleString('en-IN');
+        document.getElementById('wcDiv').innerText = '₹' + Number(d.dividend).toLocaleString('en-IN');
+        document.getElementById('wcMsg').innerText = isMe
+            ? '🎉 Congratulations! You won this month’s chit.'
+            : `🎉 Congratulations ${d.winner}! Everyone gets ₹${Number(d.dividend).toLocaleString('en-IN')} dividend this month.`;
+        ov.style.display = 'block';
+        ov.classList.remove('wc-in'); void ov.offsetWidth; ov.classList.add('wc-in');
+        try { playWinnerSound(); } catch(e) {}
+        startFireworks();
+    }
+    function closeWinnerCelebration() {
+        const ov = document.getElementById('winnerCelebration');
+        if (ov) ov.style.display = 'none';
+        if (fwRaf) cancelAnimationFrame(fwRaf);
+        fwRaf = null; fwParts = []; fwRockets = [];
+    }
+    function startFireworks() {
+        const cv = document.getElementById('wcCanvas');
+        if (!cv) return;
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const W = window.innerWidth, H = window.innerHeight;
+        cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+        const ctx = cv.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const colors = ['#ffd700', '#ff4d4d', '#4ade80', '#60a5fa', '#f472b6', '#fb923c', '#ffffff', '#a78bfa'];
+        fwParts = []; fwRockets = [];
+        fwEnd = performance.now() + (reduce ? 2500 : 9000);
+        let nextLaunch = 0;
+        const launch = () => {
+            fwRockets.push({ x: W * (0.15 + Math.random() * 0.7), y: H, vx: (Math.random() - 0.5) * 1.2,
+                vy: -(H * 0.011 + Math.random() * H * 0.004), ty: H * (0.12 + Math.random() * 0.35),
+                c: colors[(Math.random() * colors.length) | 0] });
+        };
+        const burst = (x, y, c) => {
+            const n = reduce ? 30 : 70 + ((Math.random() * 40) | 0);
+            const c2 = colors[(Math.random() * colors.length) | 0];
+            for (let i = 0; i < n; i++) {
+                const a = (Math.PI * 2 * i) / n + Math.random() * 0.2, sp = 1.5 + Math.random() * 4.2;
+                fwParts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, decay: 0.010 + Math.random() * 0.012,
+                    c: Math.random() < 0.7 ? c : c2, s: 1.6 + Math.random() * 1.6, tw: Math.random() < 0.3 });
+            }
+            try { playCrackerSound(); } catch(e) {}
+        };
+        // confetti from the top
+        for (let i = 0; i < (reduce ? 20 : 90); i++) {
+            fwParts.push({ x: Math.random() * W, y: -Math.random() * H * 0.5, vx: (Math.random() - 0.5) * 1.5, vy: 1 + Math.random() * 2.2,
+                life: 1, decay: 0.0025, c: colors[(Math.random() * colors.length) | 0], s: 3 + Math.random() * 3, conf: true, rot: Math.random() * 6 });
         }
-
-        // Try direct window location redirection
-        window.location.href = url;
-
-        // Fallback for desktop / browsers where deep-link is blocked:
-        setTimeout(() => {
-            navigator.clipboard.writeText(CHIT_UPI_ID).catch(() => {});
-        }, 1200);
+        const step = (t) => {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0,0,0,0.22)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.globalCompositeOperation = 'lighter';
+            if (t < fwEnd && t > nextLaunch) { launch(); if (Math.random() < 0.45) launch(); nextLaunch = t + 380 + Math.random() * 420; }
+            fwRockets = fwRockets.filter(r => {
+                r.x += r.vx; r.y += r.vy; r.vy += 0.05;
+                ctx.fillStyle = r.c; ctx.beginPath(); ctx.arc(r.x, r.y, 2.2, 0, 6.283); ctx.fill();
+                ctx.fillStyle = 'rgba(255,220,150,0.5)'; ctx.fillRect(r.x - 0.8, r.y, 1.6, 10);
+                if (r.y <= r.ty || r.vy >= 0) { burst(r.x, r.y, r.c); return false; }
+                return true;
+            });
+            fwParts = fwParts.filter(p => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.conf) { p.vx += Math.sin((t / 300) + p.rot) * 0.03; p.rot += 0.1; }
+                else { p.vx *= 0.985; p.vy = p.vy * 0.985 + 0.045; }
+                p.life -= p.decay;
+                if (p.life <= 0 || p.y > H + 20) return false;
+                ctx.globalAlpha = Math.max(0, p.tw ? p.life * (0.5 + Math.random() * 0.5) : p.life);
+                ctx.fillStyle = p.c;
+                if (p.conf) {
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+                    ctx.globalCompositeOperation = 'source-over'; ctx.fillRect(-p.s / 2, -p.s, p.s, p.s * 2); ctx.restore();
+                } else { ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, 6.283); ctx.fill(); }
+                ctx.globalAlpha = 1;
+                return true;
+            });
+            if (t < fwEnd || fwParts.length || fwRockets.length) fwRaf = requestAnimationFrame(step);
+            else fwRaf = null;
+        };
+        if (fwRaf) cancelAnimationFrame(fwRaf);
+        ctx.clearRect(0, 0, W, H);
+        fwRaf = requestAnimationFrame(step);
     }
 
     function copyUpiId() {
-        navigator.clipboard.writeText(CHIT_UPI_ID).then(() => {
-            alert(`UPI ID (${CHIT_UPI_ID}) copied to clipboard! Paste it in PhonePe / GPay to pay.`);
+        const id = getPayUpiId();
+        navigator.clipboard.writeText(id).then(() => {
+            alert(`UPI ID (${id}) copied! Paste it in PhonePe / GPay to pay.`);
         }).catch(() => {
-            prompt("UPI ID to enter in your UPI app:", CHIT_UPI_ID);
+            prompt("UPI ID to enter in your UPI app:", id);
         });
     }
 
@@ -7270,9 +7536,13 @@
         return getAuctionHistory().find(h => (h.winner || '').toLowerCase() === (u || '').toLowerCase()) || null;
     }
 
+    // Bhagath (organizer) does not give surety to himself: his prize goes straight to "release"
+    function isOrganizerName(u) { return (u || '').toLowerCase() === 'bhagath'; }
+
     function getSuretyStatus(u) {
         if (!getWinRecord(u)) return null;
         const r = getSurety(u);
+        if (isOrganizerName(u)) return (r && r.prizeReleased) ? 'released' : 'verified';
         if (!r || !r.status) return 'required';
         if (r.prizeReleased) return 'released';
         return r.status;
@@ -7324,7 +7594,7 @@
                         <b>🛡️ Surety & Prize Desk</b>
                         <span>${toVerify.length ? `${toVerify.length} surety to verify` : ''}${toVerify.length && toRelease.length ? ' • ' : ''}${toRelease.length ? `${toRelease.length} prize release pending` : ''}${(toVerify.length || toRelease.length) && waiting.length ? ' • ' : ''}${waiting.length ? `${waiting.length} winner(s) yet to add surety` : ''}</span>
                     </div>
-                    <button onclick="goToSurety('${pbJsq(first)}')">Chudandi →</button>
+                    <button onclick="goToSurety('${pbJsq(first)}')">Review →</button>
                 </div>`;
         }
         const won = getWinRecord(user);
@@ -7350,6 +7620,25 @@
         const r = getSurety(viewUser) || {};
         const status = getSuretyStatus(viewUser);
         const prize = `₹${Number(won.takeHome).toLocaleString('en-IN')}`;
+        if (isOrganizerName(viewUser)) {
+            const action = status === 'released'
+                ? `<span class="sr-released-note">💰 ${prize} taken on ${pbEsc(r.releasedAt || '')}</span>`
+                : (isAdmin
+                    ? `<button class="btn-postpone-save sr-release-btn" onclick="adminSuretyAction('${pbJsq(viewUser)}','release')">💰 Mark Prize Taken ${prize}</button>`
+                    : `<span class="sr-released-note">Prize release pending</span>`);
+            return `
+            <div class="pf-card sr-card is-${status}" id="suretySection">
+                <div class="sr-head">
+                    <div>
+                        <div class="pf-card-title">🛡️ Surety (Guarantor)</div>
+                        <p class="pf-hint" style="margin:4px 0 0;">Won in Month ${pbPad(won.month)} • Prize ${prize}</p>
+                    </div>
+                    ${status === 'released' ? suretyStatusChip('released') : '<span class="sr-chip is-ver">👑 Organizer</span>'}
+                </div>
+                <div class="pf-readonly-note">Bhagath is the organizer, so no surety is needed.</div>
+                <div class="sr-admin-actions">${action}</div>
+            </div>`;
+        }
         const editable = isSelf && ['required', 'rejected', 'submitted'].includes(status);
         const dis = editable ? '' : 'disabled';
         const v = k => pbEsc(r[k] || '');
@@ -7477,13 +7766,17 @@
             if (reason === null) return;
             saveSurety(u, { status: 'rejected', rejectReason: reason.trim() || 'Please submit a new surety' });
         } else if (action === 'release') {
-            if (r.status !== 'verified') { alert('Verify the surety first.'); return; }
-            const missing = [];
-            if (!r.idProofCollected) missing.push('ID proof');
-            if (!r.chequesCollected) missing.push('cheques');
+            if (getSuretyStatus(u) !== 'verified') { alert('Verify the surety first.'); return; }
             const amt = won ? `₹${Number(won.takeHome).toLocaleString('en-IN')}` : 'prize';
-            const warn = missing.length ? `\n\n⚠️ ${missing.join(' & ')} not collected yet.` : '';
-            if (!confirm(`Have you sent ${amt} to ${u}? Mark as released?${warn}`)) return;
+            if (isOrganizerName(u)) {
+                if (!confirm(`Mark Bhagath’s prize of ${amt} as taken?`)) return;
+            } else {
+                const missing = [];
+                if (!r.idProofCollected) missing.push('ID proof');
+                if (!r.chequesCollected) missing.push('cheques');
+                const warn = missing.length ? `\n\n⚠️ ${missing.join(' & ')} not collected yet.` : '';
+                if (!confirm(`Have you sent ${amt} to ${u}? Mark as released?${warn}`)) return;
+            }
             saveSurety(u, { prizeReleased: true, releasedAt: new Date().toLocaleDateString('en-IN') });
         }
         renderCanvasContent('profile', true);
@@ -8618,6 +8911,7 @@
             renderAuctionChat();
             return;
         }
+        try { maybeCelebrateWinner(getAuctionState()); } catch(e) {}
         const currentActiveTab = document.querySelector('.nav-btn.active');
         const activeTabName = currentActiveTab ? currentActiveTab.getAttribute('data-tab') : 'home';
 
@@ -8630,9 +8924,6 @@
             if (st.started && !lastKnownStarter) {
                 lastKnownStarter = true;
                 playStartSound();
-            }
-            if (st.winner) {
-                playWinnerSound();
             }
             renderCanvasContent(activeTabName, isBhagathUser());
         }
@@ -8671,8 +8962,8 @@
     }
 
     function startLiveAuction() {
-        if (!canDo('auction')) {
-            alert('Only Bhagath or a Co-Admin can start the auction.');
+        if (!isBhagathUser()) {
+            alert('Only Bhagath (admin) can start the auction.');
             return;
         }
         const st = getAuctionState();
@@ -8771,6 +9062,8 @@
 
         st.dividend = dividendPerHead;
         st.winnerPrize = winnerTakeHome;
+        st.wonAt = Date.now();
+        st.wonMonth = getCurrentChitMonth();
         st.regularDue = regularNetDue;
         st.adminDue = adminNetDue;
 
@@ -8796,20 +9089,19 @@
                 .map(f => ({ text: f.text, time: f.time }))
         });
 
-        // Auto-Sync Countdown to Next Month 5th @ 7:00 PM!
+        // Next month's countdown: 5th @ 8:00 PM (Bhagath can change it in Admin Desk → Countdown)
         const now = new Date();
-        const nextMonthTarget = new Date(now.getFullYear(), now.getMonth() + 1, 5, 19, 0, 0);
+        const nextMonthTarget = new Date(now.getFullYear(), now.getMonth() + 1, 5, 20, 0, 0);
         const nextSched = {
             dateStr: nextMonthTarget.toISOString().split('T')[0],
-            timeStr: "19:00",
-            reason: `Month ${pbPad(getCurrentChitMonth())} Winner: ${winnerName}. Month ${pbPad(Math.min(getCurrentChitMonth() + 1, 20))} Auction on 5th @ 7:00 PM`,
+            timeStr: "20:00",
+            reason: `Month ${pbPad(getCurrentChitMonth())} Winner: ${winnerName}. Month ${pbPad(Math.min(getCurrentChitMonth() + 1, 20))} Auction on 5th @ 8:00 PM`,
             targetTimestamp: nextMonthTarget.getTime(),
-            formattedText: nextMonthTarget.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) + " @ 7:00 PM"
+            formattedText: nextMonthTarget.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) + " @ 8:00 PM"
         };
         localStorage.setItem('chit_custom_auction_schedule', JSON.stringify(nextSched));
 
-        playWinnerSound();
-        alert(`🏆 AUCTION WINNER: ${winnerName}!\n\n• Discount: ₹${st.currentBid.toLocaleString('en-IN')}\n• Take-Home Cash: ₹${winnerTakeHome.toLocaleString('en-IN')}\n• Dividend (20 Members): ₹${dividendPerHead.toLocaleString('en-IN')}\n\nHome Due Card & Next Month 5th Countdown auto-synced! 🎉`);
+        maybeCelebrateWinner(st); // everyone else sees it when the result reaches their screen
 
         const currentUser = document.getElementById('portalWelcomeTitle').innerText.replace('Welcome to ', '').trim();
         const isAdmin = currentUser.toLowerCase().includes('admin') || currentUser.toLowerCase().includes('bhagath');
@@ -8861,17 +9153,10 @@
             return new Date(custom.targetTimestamp);
         }
 
-        // Default recurring: Next Sunday @ 7:00 PM
+        // Default: every month on the 5th @ 8:00 PM (moves to next month 3 hours after start time)
         const now = new Date();
-        const target = new Date(now);
-        const day = now.getDay();
-        const daysUntilSunday = (7 - day) % 7;
-        target.setDate(now.getDate() + daysUntilSunday);
-        target.setHours(19, 0, 0, 0);
-
-        if (day === 0 && now.getHours() >= 20) {
-            target.setDate(target.getDate() + 7);
-        }
+        let target = new Date(now.getFullYear(), now.getMonth(), 5, 20, 0, 0, 0);
+        if (now.getTime() > target.getTime() + 3 * 3600000) target = new Date(now.getFullYear(), now.getMonth() + 1, 5, 20, 0, 0, 0);
         return target;
     }
 
@@ -8922,7 +9207,7 @@
         renderCanvasContent('home', true);
         initPostponeInputs();
         closeUsersDataModal();
-        alert("Auction schedule reset to the default (Sunday @ 7:00 PM).");
+        alert("Auction schedule reset to the default (5th @ 8:00 PM).");
     }
 
     function applyPostponePreset(daysToAdd) {
@@ -9029,14 +9314,14 @@
         if (subtextEl) {
             subtextEl.innerText = custom 
                 ? `Live Bidding Session • ${custom.formattedText}` 
-                : 'Live Bidding Session • Sunday 7:00 PM';
+                : 'Live Bidding Session • 5th @ 8:00 PM';
         }
 
         if (bannerEl) {
             if (custom && custom.reason) {
                 bannerEl.innerHTML = `<i class='bx bxs-megaphone' style='color:#f59e0b;'></i><span style='color:#fbbf24; font-weight:600;'>Postponed: ${custom.reason}</span>`;
             } else {
-                bannerEl.innerHTML = `<i class='bx bx-info-circle'></i><span>Auction scheduled on ${custom ? custom.formattedText : 'Sunday at 7:00 PM'}. Bidding room opens precisely at start time.</span>`;
+                bannerEl.innerHTML = `<i class='bx bx-info-circle'></i><span>Auction scheduled on ${custom ? custom.formattedText : 'the 5th at 8:00 PM'}. Bidding room opens precisely at start time.</span>`;
             }
         }
 
@@ -9088,7 +9373,7 @@
             if (btn) {
                 btn.className = "btn-auction-room is-locked";
                 btn.disabled = true;
-                const opensText = custom ? custom.formattedText : 'Sunday @ 7:00 PM';
+                const opensText = custom ? custom.formattedText : '5th @ 8:00 PM';
                 btn.innerHTML = `<i class='bx bxs-lock-alt'></i> Opens on ${opensText}`;
             }
         }
@@ -9099,6 +9384,58 @@
         updateAuctionCountdownDisplay();
         auctionTimerInterval = setInterval(updateAuctionCountdownDisplay, 1000);
     }
+
+
+    // ---------- smooth screen update: when the SAME screen is re-drawn (e.g. a new bid),
+    // change only what changed instead of rebuilding it (no blink / no re-animation) ----------
+    let canvasViewKey = '';
+    function setCanvasHtml(target, html, key, prevKey) {
+        canvasViewKey = key || '';
+        if (!key || key !== prevKey || !target.firstElementChild) { target.innerHTML = html; return; }
+        const tpl = document.createElement('template');
+        tpl.innerHTML = html;
+        morphChildren(target, tpl.content);
+    }
+    function morphChildren(from, to) {
+        const a = Array.from(from.childNodes), b = Array.from(to.childNodes);
+        for (let i = 0; i < b.length; i++) {
+            const nb = b[i], na = a[i];
+            if (!na) { from.appendChild(nb.cloneNode(true)); continue; }
+            if (na.nodeType !== nb.nodeType || na.nodeName !== nb.nodeName || (na.nodeType === 1 && (na.id || '') !== (nb.id || ''))) {
+                from.replaceChild(nb.cloneNode(true), na); continue;
+            }
+            if (na.nodeType !== 1) { if (na.nodeValue !== nb.nodeValue) na.nodeValue = nb.nodeValue; continue; }
+            Array.from(na.attributes).forEach(at => { if (!nb.hasAttribute(at.name)) na.removeAttribute(at.name); });
+            Array.from(nb.attributes).forEach(at => { if (na.getAttribute(at.name) !== at.value) na.setAttribute(at.name, at.value); });
+            const tag = na.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') { if (na !== document.activeElement) na.value = nb.value; continue; }
+            morphChildren(na, nb);
+            if (tag === 'SELECT' && na !== document.activeElement) na.value = nb.value;
+        }
+        for (let i = a.length - 1; i >= b.length; i--) { if (a[i].parentNode === from) from.removeChild(a[i]); }
+    }
+
+    // ---------- Auction page countdown (display only; Bhagath starts the auction by hand) ----------
+    function tickLobbyCountdown() {
+        const box = document.getElementById('lobCountdown');
+        if (!box) return;
+        const diff = (Number(box.dataset.target) || 0) - Date.now();
+        const grid = document.getElementById('lobCdGrid'), label = document.getElementById('lobCdLabel');
+        if (diff <= 0) {
+            const msg = box.dataset.settled === '1' ? '⏰ Auction time! Waiting for Bhagath to open the next month.' : '⏰ Auction time! Waiting for Bhagath to start.';
+            if (label && label.innerText !== msg) label.innerText = msg;
+            if (grid) grid.style.display = 'none';
+            box.classList.add('is-live');
+            return;
+        }
+        const ts = Math.floor(diff / 1000);
+        const set = (id, v) => { const el = document.getElementById(id); if (el) { const tx = String(v).padStart(2, '0'); if (el.innerText !== tx) el.innerText = tx; } };
+        set('lobD', Math.floor(ts / 86400)); set('lobH', Math.floor((ts % 86400) / 3600)); set('lobM', Math.floor((ts % 3600) / 60)); set('lobS', ts % 60);
+    }
+    setInterval(() => {
+        const portal = document.getElementById('portalScreen');
+        if (portal && portal.style.display === 'block') tickLobbyCountdown();
+    }, 1000);
 
     function handleEnterAuctionRoom() {
         const btn = document.getElementById('btnEnterAuction');
@@ -9112,6 +9449,8 @@
     function renderCanvasContent(tabName, isUserAdmin) {
         const canvas = document.getElementById('canvasArea');
         if (!canvas) return;
+        const prevCanvasView = canvasViewKey;
+        canvasViewKey = '';
 
         const isBhagath = isBhagathUser();
         if (!(tabName === 'auction' && currentAuctionSubView === 'room') && isChatOpen()) {
@@ -9337,7 +9676,7 @@
                                     </div>
                                     <div>
                                         <h3 class="due-heading">Month ${pbPad(getCurrentChitMonth())} Auction</h3>
-                                        <div class="due-subtext" id="auctionSubtext">Live Bidding Session • Sunday 7:00 PM</div>
+                                        <div class="due-subtext" id="auctionSubtext">Live Bidding Session • 5th @ 8:00 PM</div>
                                     </div>
                                 </div>
                                 <div id="auctionCardBadge" class="status-pill pill-pending">
@@ -9367,14 +9706,14 @@
 
                             <div class="auction-timing-banner" id="auctionTimingBanner">
                                 <i class='bx bx-info-circle'></i>
-                                <span>Auction scheduled on Sunday at 7:00 PM. Bidding portal opens precisely at start time.</span>
+                                <span>Auction scheduled on the 5th at 8:00 PM. Bidding portal opens precisely at start time.</span>
                             </div>
                         </div>
 
                         <div>
                             <!-- Dynamic Enter Auction Button (Enabled only when auction day & time arrives) -->
                             <button id="btnEnterAuction" class="btn-auction-room is-locked" disabled onclick="handleEnterAuctionRoom()">
-                                <i class='bx bxs-lock-alt'></i> Opens on Sunday @ 7:00 PM
+                                <i class='bx bxs-lock-alt'></i> Opens on 5th @ 8:00 PM
                             </button>
                             ${isUserAdmin ? `
                                 <div style="text-align: center; margin-top: 8px;">
@@ -9478,7 +9817,7 @@
                     }
                 }
 
-                canvas.innerHTML = `
+                setCanvasHtml(canvas, `
                     <div class="single-month-hero-container">
                         <div class="single-month-card">
                             <!-- Top Bar: Month & Status Badge -->
@@ -9538,6 +9877,18 @@
                                 ${prevWinners.map(w => `<span class="mo-winner-chip ${(w || '').toLowerCase() === activeUser.toLowerCase() ? 'is-me' : ''}">🏆 ${pbEsc(w)}</span>`).join('')}
                             </div>` : ''}
 
+                            ${!isStarted ? `
+                            <div class="lob-cd" id="lobCountdown" data-target="${nextAuc.getTime()}" data-settled="${hasWinner ? 1 : 0}">
+                                <div class="lob-cd-label" id="lobCdLabel">${hasWinner ? `Month ${pbPad(Math.min(curM + 1, CHIT_TOTAL_MONTHS))} auction in` : 'Auction starts in'}</div>
+                                <div class="lob-cd-grid" id="lobCdGrid">
+                                    <div><b id="lobD">00</b><small>Days</small></div>
+                                    <div><b id="lobH">00</b><small>Hours</small></div>
+                                    <div><b id="lobM">00</b><small>Mins</small></div>
+                                    <div><b id="lobS">00</b><small>Secs</small></div>
+                                </div>
+                                <div class="lob-cd-when">📅 ${nextAucText}</div>
+                            </div>` : ''}
+
                             ${userAlreadyWon ? `
                             <div class="mo-note-won">🎉 You have already won this chit. You can still join the room to watch and chat.</div>` : ''}
 
@@ -9558,7 +9909,7 @@
                             <a href="javascript:void(0)" class="mo-winners-link" onclick="navigateToTab('winners')">🏆 View full winners list →</a>
                         </div>
                     </div>
-                `;
+                `, 'auction-lobby', prevCanvasView);
             } else {
                 // =========================================
                 // VIEW 2: LIVE AUCTION ROOM (OPENED ON "AUCTION" CLICK)
@@ -9599,7 +9950,7 @@
                     `;
                 });
 
-                canvas.innerHTML = `
+                setCanvasHtml(canvas, `
                     <div class="auction-room-wrapper">
                         <!-- Top Bar: Header, Live Badges & Back Button -->
                         <div class="auction-header-card">
@@ -9621,7 +9972,7 @@
                                 <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 700;">
                                     🟢 Joined: ${joinedList.length} Live
                                 </span>
-                                ${canDo('auction') && !isStarted && !hasWinner ? `
+                                ${isBhagathUser() && !isStarted && !hasWinner ? `
                                     <button onclick="startLiveAuction()" style="background: linear-gradient(135deg, #ffd700, #b8860b); border: none; padding: 10px 22px; border-radius: 12px; font-weight: 800; cursor: pointer; color: #000; box-shadow: 0 4px 14px rgba(212,175,55,0.4);">
                                         Start Auction 🚀
                                     </button>
@@ -9731,7 +10082,7 @@
                             </div>
                         </div>
                     </div>
-                `;
+                `, 'auction-room', prevCanvasView);
             }
         } else if (tabName === 'profile') {
             if (auctionTimerInterval) clearInterval(auctionTimerInterval);
@@ -9826,7 +10177,9 @@
             const shouldToggle = currentCordPull >= cordThreshold;
             const releaseY = currentCordPull;
 
-            if (shouldToggle) {
+            // the lamp switched itself on a moment ago: don't switch it straight back off
+            const justAuto = isOn && window._lampAutoAt && Date.now() - window._lampAutoAt < 900;
+            if (shouldToggle && !justAuto) {
                 toggleLamp();
             }
             springBackCord(releaseY);
@@ -9839,8 +10192,9 @@
         hitArea.addEventListener('click', () => {
             if (currentCordPull > 5) return;
             setCordPosition(34);
+            const justAuto = isOn && window._lampAutoAt && Date.now() - window._lampAutoAt < 900;
             setTimeout(() => {
-                toggleLamp();
+                if (!justAuto) toggleLamp();
                 springBackCord(34);
             }, 80);
         });
@@ -9848,26 +10202,64 @@
 
     
     // Web Audio Synthesized Sound Effects
-    function playChitSound(freq, type = 'sine', duration = 0.15) {
+    // ---------- sound effects (Web Audio, no files) ----------
+    let chitAudio = null;
+    function audioCtx() {
         try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            gain.gain.setValueAtTime(0.3, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + duration);
-        } catch(e) {}
+            if (!chitAudio) chitAudio = new (window.AudioContext || window.webkitAudioContext)();
+            if (chitAudio.state === 'suspended') chitAudio.resume().catch(() => {});
+            return chitAudio;
+        } catch(e) { return null; }
     }
-
-    function playBidSound() { playChitSound(880, 'sine', 0.18); }
-    function playQuitSound() { playChitSound(220, 'triangle', 0.25); }
-    function playStartSound() { playChitSound(659.25, 'sine', 0.3); }
-    function playWinnerSound() { playChitSound(1046.5, 'sine', 0.45); }
+    ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => audioCtx(), { once: true, passive: true }));
+    function tone(freq, start, dur, type = 'sine', vol = 0.15, slideTo) {
+        const c = audioCtx(); if (!c) return;
+        const t = c.currentTime + (start || 0);
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, t);
+        if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(c.destination);
+        o.start(t); o.stop(t + dur + 0.05);
+    }
+    function noise(start, dur, vol, freq, q) {
+        const c = audioCtx(); if (!c) return;
+        const t = c.currentTime + (start || 0);
+        const len = Math.max(1, Math.floor(c.sampleRate * dur));
+        const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.2);
+        const src = c.createBufferSource(); src.buffer = buf;
+        const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 1500; f.Q.value = q || 0.8;
+        const g = c.createGain(); g.gain.setValueAtTime(vol, t);
+        src.connect(f); f.connect(g); g.connect(c.destination);
+        src.start(t);
+    }
+    function playChitSound(freq, type = 'sine', duration = 0.15) { tone(freq, 0, duration, type, 0.14); }
+    // coin "ting-ting"
+    function playBidSound() { tone(1318.5, 0, 0.14, 'triangle', 0.16); tone(1975.5, 0.07, 0.22, 'sine', 0.12); }
+    // soft falling tone
+    function playQuitSound() { tone(440, 0, 0.32, 'sine', 0.12, 260); }
+    // rising "ta-da-da-daa"
+    function playStartSound() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * 0.09, i === 3 ? 0.45 : 0.18, 'triangle', 0.14)); }
+    // fanfare + shimmer
+    function playWinnerSound() {
+        [523.25, 659.25, 783.99].forEach((f, i) => tone(f, i * 0.13, 0.22, 'triangle', 0.15));
+        tone(1046.5, 0.39, 0.9, 'triangle', 0.17); tone(1318.5, 0.39, 0.9, 'sine', 0.08); tone(1568, 0.39, 0.9, 'sine', 0.06);
+        [0.55, 0.7, 0.85].forEach((st, i) => tone(2093 + i * 300, st, 0.25, 'sine', 0.04));
+    }
+    // cracker: boom + crackle
+    let lastCracker = 0;
+    function playCrackerSound() {
+        const now = performance.now();
+        if (now - lastCracker < 140) return;
+        lastCracker = now;
+        noise(0, 0.35, 0.5, 220 + Math.random() * 120, 0.7);
+        tone(120 + Math.random() * 40, 0, 0.25, 'sine', 0.18, 50);
+        for (let i = 0; i < 6; i++) noise(0.08 + Math.random() * 0.35, 0.03, 0.18, 3000 + Math.random() * 2500, 2);
+    }
 
     function toggleLamp() {
         isOn = !isOn;
@@ -10377,7 +10769,7 @@
     // =========================================
     const COADMIN_PERMS = {
         payments: '💰 Payments approve / revoke',
-        auction: '🔨 Auction start / reset',
+        auction: '🔨 Auction reset & schedule (start is Bhagath only)',
         members: '👥 Members approve & password reset'
     };
 
@@ -10706,6 +11098,8 @@
     // (compares the server's ETag / Last-Modified of this page with the one at start)
     // =========================================
     let appVersionTag = null, appUpdateReady = false, appUpdateLastCheck = 0;
+    // remove the "?u=..." cache-buster left by the last update
+    try { if (/[?&]u=\d+/.test(location.search)) history.replaceState(null, '', location.pathname + location.search.replace(/[?&]u=\d+/, '').replace(/^&/, '?') + location.hash); } catch(e) {}
     async function fetchAppVersionTag() {
         if (!/^https?:$/.test(location.protocol)) return null;
         try {
@@ -10716,37 +11110,45 @@
     }
     async function checkForAppUpdate(force) {
         if (appUpdateReady || !navigator.onLine) return;
-        if (!force && Date.now() - appUpdateLastCheck < 60000) return;
+        if (!force && Date.now() - appUpdateLastCheck < 20000) return;
         appUpdateLastCheck = Date.now();
         const tag = await fetchAppVersionTag();
         if (!tag) return;
         if (!appVersionTag) { appVersionTag = tag; return; }
         if (tag === appVersionTag) return;
+        // a new version is on GitHub: block the app until the member taps "Update now"
         appUpdateReady = true;
-        const portalOpen = document.getElementById('portalScreen') && document.getElementById('portalScreen').style.display === 'block';
-        const ae = document.activeElement;
-        const typing = ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && ae.value;
-        if (!portalOpen && !typing) return applyAppUpdate(); // on the sign-in screen: just reload
-        const bar = document.getElementById('updateBar');
-        if (bar) bar.style.display = 'flex';
+        const gate = document.getElementById('updateGate');
+        if (gate) gate.style.display = 'grid';
+        try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch(e) {}
     }
     function applyAppUpdate() {
+        const btn = document.getElementById('ugBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Updating…'; }
         let done = false;
-        const go = () => { if (done) return; done = true; location.reload(); };
+        const go = () => {
+            if (done) return; done = true;
+            const base = location.pathname + location.search.replace(/[?&]u=\d+/, '');
+            location.replace(base + (base.indexOf('?') >= 0 ? '&' : '?') + 'u=' + Date.now() + location.hash);
+        };
         try {
+            const tasks = [];
             if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
-                navigator.serviceWorker.getRegistration().then(r => r ? r.update().catch(() => {}) : null).catch(() => {}).then(go);
-                setTimeout(go, 2500);
-                return;
+                tasks.push(navigator.serviceWorker.getRegistration().then(r => r ? r.update().catch(() => {}) : null).catch(() => {}));
             }
-        } catch(e) {}
-        go();
+            if (window.caches && caches.keys) {
+                tasks.push(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {}));
+            }
+            Promise.all(tasks).then(go, go);
+            setTimeout(go, 3000);
+        } catch(e) { go(); }
     }
-    function dismissAppUpdate() { const bar = document.getElementById('updateBar'); if (bar) bar.style.display = 'none'; }
+    function dismissAppUpdate() { /* update is required – nothing to dismiss */ }
+    window.addEventListener('pageshow', (e) => { if (e.persisted) checkForAppUpdate(true); });
     window.addEventListener('load', () => { setTimeout(() => checkForAppUpdate(true), 1500); });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForAppUpdate(false); });
     window.addEventListener('online', () => checkForAppUpdate(true));
-    setInterval(() => { if (document.visibilityState === 'visible') checkForAppUpdate(true); }, 10 * 60 * 1000);
+    setInterval(() => { if (document.visibilityState === 'visible') checkForAppUpdate(true); }, 3 * 60 * 1000);
 
     function refreshInstallUi() {
         const active = document.querySelector('.nav-btn.active');
@@ -10820,7 +11222,7 @@
             sections: [
                 { icon: '🪙', title: 'How the chit works', items: [
                     ['What is this chit?', 'There are <b>20 members</b> and the chit value is <b>₹50,000</b>. It runs for <b>20 months</b>. Every month each member pays a base share of <b>₹2,500</b>, and one member takes the prize through an auction.'],
-                    ['How is the winner decided?', 'An auction is held every month (default: <b>5th, 7:00 PM</b>). Members bid a <b>discount</b>. The member with the highest discount wins. The winner receives <b>₹48,500 − bid</b> (₹50,000 minus the ₹1,500 organizer fee, minus the bid).'],
+                    ['How is the winner decided?', 'An auction is held every month (default: <b>5th, 8:00 PM</b>). Members bid a <b>discount</b>. The member with the highest discount wins. The winner receives <b>₹48,500 − bid</b> (₹50,000 minus the ₹1,500 organizer fee, minus the bid).'],
                     ['What is the dividend?', 'The winning bid is shared equally by all 20 members as a discount on that month’s installment: <b>dividend = bid ÷ 20</b>.<div class="help-example"><b>Example:</b> bid ₹8,000 → winner gets <b>₹40,500</b> • dividend ₹400 → everyone pays <b>₹2,100</b> instead of ₹2,500.</div>'],
                     ['Can I win more than once?', 'No. Each member wins <b>only once</b> in 20 months. After you win, you can still join the auction room to watch and chat, but you cannot bid.'],
                     ['What does the organizer get?', 'A <b>₹1,500 organizer fee</b> is deducted from the pool every month, and Bhagath’s own installment is ₹1,500 lower. Both are shown in the app.']
@@ -10874,7 +11276,7 @@
             sections: [
                 { icon: '🪙', title: 'చిట్ ఎలా పని చేస్తుంది', items: [
                     ['ఈ చిట్ ఏమిటి?', 'ఇందులో <b>20 మంది సభ్యులు</b>, చిట్ విలువ <b>₹50,000</b>. ఇది <b>20 నెలలు</b> నడుస్తుంది. ప్రతి నెల ప్రతి సభ్యుడు <b>₹2,500</b> వాటా కడతారు, ఒకరు వేలం ద్వారా బహుమతి తీసుకుంటారు.'],
-                    ['విజేతను ఎలా నిర్ణయిస్తారు?', 'ప్రతి నెల వేలం జరుగుతుంది (సాధారణంగా <b>5వ తేదీ, రాత్రి 7:00</b>). సభ్యులు <b>డిస్కౌంట్</b> బిడ్ చేస్తారు. ఎక్కువ డిస్కౌంట్ ఇచ్చినవారు గెలుస్తారు. విజేతకు <b>₹48,500 − బిడ్</b> వస్తుంది (₹50,000 లో ₹1,500 నిర్వాహక రుసుము, బిడ్ తీసివేసి).'],
+                    ['విజేతను ఎలా నిర్ణయిస్తారు?', 'ప్రతి నెల వేలం జరుగుతుంది (సాధారణంగా <b>5వ తేదీ, రాత్రి 8:00</b>). సభ్యులు <b>డిస్కౌంట్</b> బిడ్ చేస్తారు. ఎక్కువ డిస్కౌంట్ ఇచ్చినవారు గెలుస్తారు. విజేతకు <b>₹48,500 − బిడ్</b> వస్తుంది (₹50,000 లో ₹1,500 నిర్వాహక రుసుము, బిడ్ తీసివేసి).'],
                     ['డివిడెండ్ అంటే ఏమిటి?', 'గెలిచిన బిడ్ మొత్తాన్ని 20 మంది సమానంగా పంచుకుంటారు. ఆ నెల వాయిదాలో తగ్గింపుగా వస్తుంది: <b>డివిడెండ్ = బిడ్ ÷ 20</b>.<div class="help-example"><b>ఉదాహరణ:</b> బిడ్ ₹8,000 → విజేతకు <b>₹40,500</b> • డివిడెండ్ ₹400 → అందరూ ₹2,500 బదులు <b>₹2,100</b> కడతారు.</div>'],
                     ['ఒకటి కంటే ఎక్కువసార్లు గెలవచ్చా?', 'లేదు. 20 నెలల్లో ప్రతి సభ్యుడు <b>ఒక్కసారి మాత్రమే</b> గెలుస్తారు. గెలిచిన తర్వాత వేలం రూమ్‌లో చూడవచ్చు, చాట్ చేయవచ్చు, కానీ బిడ్ చేయలేరు.'],
                     ['నిర్వాహకుడికి ఏమి వస్తుంది?', 'ప్రతి నెల పూల్ నుండి <b>₹1,500 నిర్వాహక రుసుము</b> తీసివేస్తారు, భగత్ వాయిదా ₹1,500 తక్కువ ఉంటుంది. రెండూ యాప్‌లో కనిపిస్తాయి.']
@@ -11014,7 +11416,21 @@
     // Text-node based: exact labels are swapped, original kept for switching back.
     // =========================================
     const I18N_TE = {
+        'Auction starts in': 'వేలం మొదలయ్యేది', 'Days': 'రోజులు', 'Hours': 'గంటలు', 'Mins': 'నిమి', 'Secs': 'సెక',
+        '⏰ Auction time! Waiting for Bhagath to start.': '⏰ వేలం సమయం! భగత్ స్టార్ట్ చేయడం కోసం వేచి ఉంది.',
+        '⏰ Auction time! Waiting for Bhagath to open the next month.': '⏰ వేలం సమయం! భగత్ తదుపరి నెల తెరవడం కోసం వేచి ఉంది.',
+        'Only Bhagath (admin) can start the auction.': 'భగత్ (అడ్మిన్) మాత్రమే వేలం స్టార్ట్ చేయగలరు.',
+        'Pay Bhagath': 'భగత్‌కి చెల్లించండి', 'UPI ID': 'UPI ID', 'Amount': 'మొత్తం', 'Enter this amount in the app': 'ఈ మొత్తం యాప్‌లో ఎంటర్ చేయండి',
+        'Copy': 'కాపీ', '✅ UPI ID copied': '✅ UPI ID కాపీ అయింది', '✅ Amount copied': '✅ మొత్తం కాపీ అయింది',
+        'Type the amount shown above and pay.': 'పైన చూపిన మొత్తం టైప్ చేసి చెల్లించండి.',
+        'Bid discount': 'బిడ్ డిస్కౌంట్', 'Take-home': 'చేతికి వచ్చేది', 'Dividend each': 'ఒక్కొక్కరికి డివిడెండ్', 'Close': 'మూసివేయి',
+        '🎉 Congratulations! You won this month’s chit.': '🎉 అభినందనలు! ఈ నెల చిట్ మీరు గెలిచారు.',
+        'Review →': 'చూడండి →',
+        'Bhagath is the organizer, so no surety is needed.': 'భగత్ నిర్వాహకుడు, కాబట్టి ష్యూరిటీ అవసరం లేదు.',
+        '👑 Organizer': '👑 నిర్వాహకుడు', 'Prize release pending': 'ప్రైజ్ రిలీజ్ పెండింగ్',
         '🆕 New version available': '🆕 కొత్త వెర్షన్ వచ్చింది', 'Update now': 'ఇప్పుడే అప్‌డేట్',
+        'New version available': 'కొత్త వెర్షన్ వచ్చింది', 'Please update the app to continue.': 'కొనసాగడానికి యాప్‌ను అప్‌డేట్ చేయండి.',
+        'Your data is safe. You stay signed in.': 'మీ డేటా సురక్షితం. మీరు లాగిన్‌లోనే ఉంటారు.', 'Updating…': 'అప్‌డేట్ అవుతోంది…',
         'Email': 'ఈమెయిల్', 'Your Email': 'మీ ఈమెయిల్', '(used to sign in & reset password)': '(సైన్ ఇన్ & పాస్‌వర్డ్ రీసెట్ కోసం)',
         'Enter your registered email. We will send you a link to set a new password.': 'మీరు రిజిస్టర్ చేసిన ఈమెయిల్ ఇవ్వండి. కొత్త పాస్‌వర్డ్ పెట్టుకునే లింక్ పంపుతాం.',
         '📧 Send reset link': '📧 రీసెట్ లింక్ పంపండి', '🔑 Reset password': '🔑 పాస్‌వర్డ్ రీసెట్',
@@ -11090,7 +11506,7 @@
         'Approve Paid': 'ఆమోదించండి', 'Mark as Paid': 'చెల్లించినట్టు గుర్తించు', 'Revoke': 'రద్దు చేయి',
         'Due 🔴': 'బాకీ 🔴', 'Private • only visible to you': 'ప్రైవేట్ • మీకు మాత్రమే కనిపిస్తుంది', 'Admin view': 'అడ్మిన్ వ్యూ',
         'Unverified • Installment Due': 'చెల్లించాల్సి ఉంది', 'Dividend Discount (20 Members):': 'డివిడెండ్ తగ్గింపు (20 మంది):',
-        'Live Bidding Session • Sunday 7:00 PM': 'లైవ్ వేలం • ఆదివారం రా. 7:00', 'Registered Members Directory': 'నమోదైన సభ్యుల జాబితా',
+        'Live Bidding Session • 5th @ 8:00 PM': 'లైవ్ వేలం • 5వ తేదీ రా. 8:00', 'Registered Members Directory': 'నమోదైన సభ్యుల జాబితా',
         'late': 'ఆలస్యం', 'Interim': 'మధ్యంతర', 'Help': 'సహాయం', '❓ Need help?': '❓ సహాయం కావాలా?'
     };
     const I18N_TE_PH = {
@@ -11177,7 +11593,7 @@
             if (!isOn && authVisible) {
                 // gentle auto pull so first-time users are not stuck
                 setCordPosition(34);
-                setTimeout(() => { toggleLamp(); springBackCord(34); }, 120);
+                setTimeout(() => { if (!isOn) { toggleLamp(); window._lampAutoAt = Date.now(); } springBackCord(34); }, 120); // re-check: the user may have pulled the cord meanwhile
             }
         }, 4000); };
         if (FB_MODE) { fbInit().then(signedIn => { if (!signedIn) startLampTimer(); }); return; }

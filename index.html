@@ -5486,7 +5486,7 @@
                 <input type="tel" id="regPhone" placeholder="10-digit mobile" maxlength="15" inputmode="tel" autocomplete="tel" />
             </div>
             <div class="form-group" id="regEmailGroup" style="display: none;">
-                <label>Email <span class="label-hint">(used to sign in &amp; reset password)</span></label>
+                <label>Email <span class="label-hint">(optional – to reset your password yourself)</span></label>
                 <input type="email" id="regEmail" placeholder="you@gmail.com" maxlength="80" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="email" />
             </div>
             <div class="form-group">
@@ -5764,7 +5764,7 @@
 
     function fbAuthErrorText(e) {
         const c = (e && e.code) || '';
-        if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return 'Incorrect email or password.';
+        if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return 'Incorrect username or password. Please try again.';
         if (/email-already-in-use/.test(c)) return 'An account with this email already exists. Please sign in.';
         if (/invalid-email/.test(c)) return 'Please enter a valid email address.';
         if (/weak-password/.test(c)) return 'Password must be at least 6 characters.';
@@ -6090,11 +6090,16 @@
         }
         let isAdmin = false;
         try { isAdmin = (await F.getDoc(F.doc(db, 'admins', user.uid))).exists(); } catch(e) {}
-        let status = 'pending';
+        let status = 'pending', memberUid = null;
         try {
             const m = await F.getDoc(F.doc(db, 'members', username));
-            if (m.exists()) status = m.data().status || 'pending';
+            if (m.exists()) { status = m.data().status || 'pending'; memberUid = m.data().uid || null; }
         } catch(e) {}
+        if (memberUid && memberUid !== user.uid) {
+            await FB.A.signOut(FB.auth);
+            if (!silent) showAuthMsg('loginMsg', 'This password was reset. Please sign in with your new password.');
+            return false;
+        }
         if (isAdmin && status !== 'approved') {
             try { await F.setDoc(F.doc(db, 'members', username), { status: 'approved', approvedAt: fbToday() }, { merge: true }); status = 'approved'; } catch(e) {}
         }
@@ -6109,6 +6114,14 @@
         FB.user = user; FB.uid = user.uid; FB.username = username; FB.isAdmin = isAdmin;
         fbClearCache();
         fbAttach();
+        if (isAdmin) {
+            // Bhagath's phone is shown on the sign-in screen ("Forgot password" → WhatsApp Bhagath)
+            try {
+                const ps = await F.getDoc(F.doc(db, 'profiles', username));
+                const ph = ps.exists() ? ((JSON.parse(ps.data().json || '{}') || {}).phone || '') : '';
+                if (ph && (FB.publicDoc || {}).adminPhone !== ph) await F.setDoc(F.doc(db, 'shared', 'public'), { adminPhone: ph }, { merge: true });
+            } catch(e) {}
+        }
         // wait briefly for the first data so the portal opens filled in
         const t0 = Date.now();
         const allIn = () => FB.gotMembers && Object.values(FB_SHARED).every(n => FB.firstSeen.has(n));
@@ -6138,21 +6151,46 @@
         });
     }
 
+    // ---- username → hidden login email ----
+    // Members sign in with USERNAME + password. Firebase needs an email, so:
+    //  • member gave an email  → that email is the login (self "Forgot password" works)
+    //  • no email              → a hidden address <username>-<random>@<authDomain> (never shown, never mailed)
+    // logins/{username} = { email, hasEmail, uid } lets the sign-in screen find it.
+    function fbHiddenEmail(u) {
+        const dom = (FB_CFG && FB_CFG.authDomain) || 'members.local';
+        return u + '-' + Math.random().toString(36).slice(2, 8) + '@' + dom;
+    }
+    function fbMaskEmail(e) {
+        const [a, d] = String(e || '').split('@');
+        if (!d) return '';
+        return (a.length <= 2 ? a[0] + '*' : a[0] + '*'.repeat(Math.min(6, a.length - 2)) + a[a.length - 1]) + '@' + d;
+    }
+    async function fbLookupLogin(u) {
+        const F = FB.F;
+        const s = await F.getDoc(F.doc(FB.db, 'logins', u));
+        return s.exists() ? s.data() : null;
+    }
+
     async function fbLogin() {
         clearAuthMsg('loginMsg');
-        const email = document.getElementById('loginUsername').value.trim();
+        const raw = document.getElementById('loginUsername').value.trim();
         const pw = document.getElementById('loginPassword').value;
-        if (!email || !pw) return showAuthMsg('loginMsg', 'Please enter your email and password.');
-        if (email.indexOf('@') < 0) return showAuthMsg('loginMsg', 'Please sign in with the email you registered with.');
+        if (!raw || !pw) return showAuthMsg('loginMsg', 'Please enter your username and password.');
         if (!FB.on) return showAuthMsg('loginMsg', 'Still connecting to the server. Please wait a moment and try again.');
         const btn = document.querySelector('#loginForm .login-btn');
         if (btn) { btn.disabled = true; btn.dataset.t = btn.textContent; btn.textContent = 'Signing in…'; }
         try {
+            let email = raw;
+            if (raw.indexOf('@') < 0) {
+                const L = await fbLookupLogin(raw.toLowerCase());
+                if (!L || !L.email) throw { code: 'auth/invalid-credential' };
+                email = L.email;
+            }
             const remember = document.getElementById('rememberMe') ? document.getElementById('rememberMe').checked : true;
             await FB.A.setPersistence(FB.auth, remember ? FB.A.browserLocalPersistence : FB.A.browserSessionPersistence);
             const cred = await FB.A.signInWithEmailAndPassword(FB.auth, email, pw);
             const ok = await fbAfterSignIn(cred.user, false);
-            if (ok) { try { triggerGoogleSavePrompt(email, pw); } catch(_) {} document.getElementById('loginPassword').value = ''; }
+            if (ok) { try { triggerGoogleSavePrompt(raw, pw); } catch(_) {} document.getElementById('loginPassword').value = ''; }
         } catch(e) {
             document.getElementById('loginPassword').value = '';
             showAuthMsg('loginMsg', fbAuthErrorText(e));
@@ -6164,13 +6202,13 @@
     async function fbRegister() {
         clearAuthMsg('registerMsg');
         const g = id => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
-        const fullName = g('regFullName'), phone = g('regPhone'), email = g('regEmail');
+        const fullName = g('regFullName'), phone = g('regPhone'), email = g('regEmail').toLowerCase();
         const u = g('regUsername').toLowerCase();
         const p = document.getElementById('regPassword').value, p2 = document.getElementById('regPassword2').value;
-        if (!fullName || !phone || !email || !u || !p || !p2) return showAuthMsg('registerMsg', 'Please fill in all fields.');
+        if (!fullName || !phone || !u || !p || !p2) return showAuthMsg('registerMsg', 'Please fill in all fields.');
         const digits = phone.replace(/\D/g, '');
         if (!(digits.length === 10 || (digits.length === 12 && digits.startsWith('91')))) return showAuthMsg('registerMsg', 'Phone number must be 10 digits.');
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAuthMsg('registerMsg', 'Please enter a valid email address.');
+        if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAuthMsg('registerMsg', 'Please enter a valid email address, or leave it empty.');
         if (!/^[a-z0-9_]{3,20}$/.test(u)) return showAuthMsg('registerMsg', 'Username must be 3-20 characters: lowercase letters, numbers, _ only (no spaces).');
         if ((u.includes('bhagath') && u !== 'bhagath') || u.includes('admin')) return showAuthMsg('registerMsg', 'This username is reserved. Please try another one.');
         if (p.length < 6) return showAuthMsg('registerMsg', 'Password must be at least 6 characters.');
@@ -6180,47 +6218,78 @@
         const btn = document.getElementById('registerSubmitBtn');
         if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
         const F = FB.F, db = FB.db;
-        let cred = null;
+        const authEmail = email || fbHiddenEmail(u);
+        let cred = null, claimed = false;
         try {
-            cred = await FB.A.createUserWithEmailAndPassword(FB.auth, email, p);
-            const all = await F.getDocs(F.collection(db, 'members'));
-            let used = 0;
-            all.forEach(d => { const s = d.data().status; if (s === 'approved' || s === 'pending') used++; });
-            const role = u === 'bhagath' ? 'organizer' : 'member';
-            if (role !== 'organizer' && used >= CHIT_MAX_MEMBERS) throw { code: 'app/full' };
-            await F.setDoc(F.doc(db, 'members', u), {
-                uid: cred.user.uid, username: u, status: 'pending', role,
-                createdAt: fbToday(), requestedAt: Date.now()
-            });
-            await F.setDoc(F.doc(db, 'users', cred.user.uid), { username: u });
-            await F.setDoc(F.doc(db, 'profiles', u), { json: JSON.stringify({ fullName, phone, email }), by: u, at: F.serverTimestamp() });
+            cred = await FB.A.createUserWithEmailAndPassword(FB.auth, authEmail, p);
+            const uid = cred.user.uid;
+            const ms = await F.getDoc(F.doc(db, 'members', u));
+            if (ms.exists()) {
+                const m = ms.data();
+                // Bhagath pressed "Reset Password" for this member → same username can set a new password (24 h)
+                if (m.role !== 'organizer' && (m.resetUntil || 0) > Date.now()) {
+                    await F.setDoc(F.doc(db, 'members', u), { uid, resetUntil: 0, updatedAt: Date.now() }, { merge: true });
+                    claimed = true;
+                } else {
+                    throw { code: 'app/taken' };
+                }
+            } else {
+                const all = await F.getDocs(F.collection(db, 'members'));
+                let used = 0;
+                all.forEach(d => { const s = d.data().status; if (s === 'approved' || s === 'pending') used++; });
+                const role = u === 'bhagath' ? 'organizer' : 'member';
+                if (role !== 'organizer' && used >= CHIT_MAX_MEMBERS) throw { code: 'app/full' };
+                await F.setDoc(F.doc(db, 'members', u), {
+                    uid, username: u, status: 'pending', role,
+                    createdAt: fbToday(), requestedAt: Date.now()
+                });
+            }
+            await F.setDoc(F.doc(db, 'users', uid), { username: u });
+            await F.setDoc(F.doc(db, 'logins', u), { email: authEmail, hasEmail: !!email, uid });
+            let prof = {};
+            if (claimed) {
+                try { const ps = await F.getDoc(F.doc(db, 'profiles', u)); if (ps.exists()) prof = JSON.parse(ps.data().json || '{}') || {}; } catch(_) {}
+            }
+            Object.assign(prof, { fullName, phone, email, updatedAt: Date.now() });
+            await F.setDoc(F.doc(db, 'profiles', u), { json: JSON.stringify(prof), by: u, at: F.serverTimestamp() });
             await FB.A.signOut(FB.auth);
         } catch(e) {
-            if (cred && cred.user && !(e && e.code === 'auth/email-already-in-use')) { try { await cred.user.delete(); } catch(_) {} }
+            if (cred && cred.user) { try { await cred.user.delete(); } catch(_) {} }
             try { await FB.A.signOut(FB.auth); } catch(_) {}
             if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
             if (e && e.code === 'app/full') return showAuthMsg('registerMsg', 'Sorry, all 20 slots are full.');
-            if (e && e.code === 'permission-denied') return showAuthMsg('registerMsg', 'This username is taken. Please try another one.');
+            if (e && (e.code === 'app/taken' || e.code === 'permission-denied')) return showAuthMsg('registerMsg', 'This username is taken. Please try another one.');
+            if (e && e.code === 'auth/email-already-in-use') return showAuthMsg('registerMsg', 'This email is already used by another account. Use “Forgot password?” on the Sign In tab, or leave Email empty.');
             return showAuthMsg('registerMsg', fbAuthErrorText(e));
         }
         if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
         ['regFullName', 'regPhone', 'regEmail', 'regUsername', 'regPassword', 'regPassword2'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         switchTab('login');
-        document.getElementById('loginUsername').value = email;
-        showAuthMsg('loginMsg', '✅ Account created! You can sign in once Bhagath approves it.', 'ok');
+        document.getElementById('loginUsername').value = u;
+        if (claimed) showAuthMsg('loginMsg', '✅ New password saved! Sign in now with your new password.', 'ok');
+        else showAuthMsg('loginMsg', '✅ Account created! You can sign in once Bhagath approves it.', 'ok');
     }
 
     async function fbForgot() {
-        const email = (document.getElementById('forgotUsername').value || '').trim();
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAuthMsg('forgotMsg', 'Please enter the email you registered with.');
+        const u = (document.getElementById('forgotUsername').value || '').trim().toLowerCase();
+        if (!u) return showAuthMsg('forgotMsg', 'Please enter your username.');
         if (!FB.on) return showAuthMsg('forgotMsg', 'Still connecting to the server. Please try again in a moment.');
-        try {
-            await FB.A.sendPasswordResetEmail(FB.auth, email);
-            showAuthMsg('forgotMsg', '✅ If this email is registered, a password reset link has been sent. Check your inbox (and spam folder).', 'ok');
-        } catch(e) {
-            if (/user-not-found/.test((e && e.code) || '')) return showAuthMsg('forgotMsg', '✅ If this email is registered, a password reset link has been sent. Check your inbox (and spam folder).', 'ok');
-            showAuthMsg('forgotMsg', fbAuthErrorText(e));
+        let L = null;
+        try { L = await fbLookupLogin(u); } catch(e) { return showAuthMsg('forgotMsg', fbAuthErrorText(e)); }
+        if (!L) return showAuthMsg('forgotMsg', 'No account found with this username.');
+        if (L.hasEmail && L.email) {
+            try {
+                await FB.A.sendPasswordResetEmail(FB.auth, L.email);
+                return showAuthMsg('forgotMsg', `✅ Reset link sent to ${fbMaskEmail(L.email)}. Open the email, set a new password, then sign in with your username.`, 'ok');
+            } catch(e) { return showAuthMsg('forgotMsg', fbAuthErrorText(e)); }
         }
+        // no email saved → Bhagath resets it
+        let adminPhone = '';
+        try { const s = await FB.F.getDoc(FB.F.doc(FB.db, 'shared', 'public')); if (s.exists()) adminPhone = profileDigits(s.data().adminPhone || ''); } catch(e) {}
+        const text = encodeURIComponent(`Hi Bhagath, I forgot my 50K Chit portal password. Username: ${u}. Please reset it 🙏`);
+        if (!adminPhone) return showAuthMsg('forgotMsg', 'No email is saved for this account. Please ask Bhagath to reset your password.', 'info');
+        window.open(`https://wa.me/${adminPhone}?text=${text}`, '_blank');
+        showAuthMsg('forgotMsg', 'No email is saved for this account, so WhatsApp opened to ask Bhagath. After he resets it, tap Register and use the SAME username with a new password.', 'info');
     }
 
     async function fbChangePassword() {
@@ -6244,13 +6313,21 @@
 
     async function fbAdminResetPassword(u) {
         if (!canDo('members')) return;
-        const pf = getMemberProfile(u) || {};
-        if (!pf.email) { alert(`${u} has no email saved. Ask them to use "Forgot password?" on the sign-in screen.`); return; }
-        if (!confirm(`Send a password reset link to ${pf.email}?`)) return;
+        const key = (u || '').toLowerCase();
+        if (key === 'bhagath') { alert('Bhagath’s own password can be reset only with “Forgot password?” (email link).'); return; }
+        const pf = getMemberProfile(key) || {};
+        const extra = pf.email ? `\n\n(${u} has an email saved, so they can also use “Forgot password?” themselves.)` : '';
+        if (!confirm(`Reset ${u}’s password?\n\n${u} must open the portal → Register → use the SAME username “${key}” and a new password within 24 hours. All their data (passbook, payments) stays.${extra}`)) return;
         try {
-            await FB.A.sendPasswordResetEmail(FB.auth, pf.email);
-            alert(`✅ Reset link sent to ${pf.email}. Ask ${u} to check their inbox (and spam folder).`);
-        } catch(e) { alert(fbAuthErrorText(e)); }
+            await FB.F.setDoc(FB.F.doc(FB.db, 'members', key), { resetUntil: Date.now() + 24 * 3600 * 1000, updatedAt: Date.now() }, { merge: true });
+        } catch(e) { fbWriteError(e); return; }
+        const wa = profileDigits(pf.phone);
+        const msg = `Hi ${u}, your 50K Chit password reset is ready.\nOpen the portal → Register → enter username "${key}" (same as before) and a NEW password. Do it within 24 hours. Your passbook and payments are safe.`;
+        if (wa && confirm(`Reset is ready for ${u} (valid 24 hours).\n\nSend the steps on WhatsApp?`)) {
+            window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+        } else if (!wa) {
+            alert(`Reset is ready for ${u} (valid 24 hours).\n\nTell ${u}: Register again with the same username “${key}” and a new password.`);
+        }
     }
 
     async function fbLogout() {
@@ -6262,28 +6339,15 @@
 
     // ---- switch the sign-in screens to email wording ----
     function fbSetModeUi() {
-        const lu = document.getElementById('loginUsername');
-        if (lu) {
-            lu.type = 'email'; lu.placeholder = 'you@gmail.com'; lu.setAttribute('autocomplete', 'email');
-            const lbl = lu.closest('.form-group') && lu.closest('.form-group').querySelector('label');
-            if (lbl) lbl.textContent = 'Email';
-        }
+        // sign in stays USERNAME + password; register gets an optional email for self reset
         const eg = document.getElementById('regEmailGroup');
         if (eg) eg.style.display = '';
-        const si = document.getElementById('regSlotsInfo');
-        if (si) si.style.display = 'none';
         const rp = document.getElementById('regPassword');
         if (rp) rp.placeholder = 'At least 6 characters';
-        const fu = document.getElementById('forgotUsername');
-        if (fu) {
-            fu.type = 'email'; fu.placeholder = 'you@gmail.com';
-            const lbl = fu.closest('.form-group') && fu.closest('.form-group').querySelector('label');
-            if (lbl) lbl.textContent = 'Your Email';
-        }
         const ft = document.querySelector('.forgot-text');
-        if (ft) ft.textContent = 'Enter your registered email. We will send you a link to set a new password.';
+        if (ft) ft.textContent = 'Enter your username. If you saved an email, we will send a reset link. Otherwise Bhagath will help you reset it.';
         const fb = document.querySelector('.forgot-wa-btn');
-        if (fb) fb.textContent = '📧 Send reset link';
+        if (fb) fb.textContent = '🔑 Reset password';
     }
 
 
@@ -10890,8 +10954,8 @@
             // online mode: password reset is by email link
             c._fb = true;
             const fix = currentLang === 'te'
-                ? 'సైన్ ఇన్ పేజీలో <b>పాస్‌వర్డ్ మర్చిపోయారా?</b> నొక్కి, మీరు రిజిస్టర్ చేసిన ఈమెయిల్ ఇవ్వండి. కొత్త పాస్‌వర్డ్ పెట్టుకునే లింక్ మీ ఈమెయిల్‌కి వస్తుంది (స్పామ్ ఫోల్డర్ కూడా చూడండి).'
-                : 'On the sign-in screen tap <b>Forgot password?</b> and enter the email you registered with. You will get a link to set a new password (check the spam folder too).';
+                ? 'సైన్ ఇన్ పేజీలో <b>పాస్‌వర్డ్ మర్చిపోయారా?</b> నొక్కి మీ యూజర్‌నేమ్ ఇవ్వండి. రిజిస్టర్ చేసేటప్పుడు ఈమెయిల్ ఇచ్చి ఉంటే, రీసెట్ లింక్ ఆ ఈమెయిల్‌కి వస్తుంది. ఈమెయిల్ ఇవ్వకపోతే భగత్‌కి చెప్పండి: ఆయన <b>Reset</b> నొక్కిన తర్వాత, <b>రిజిస్టర్</b>‌లో అదే యూజర్‌నేమ్‌తో కొత్త పాస్‌వర్డ్ పెట్టుకోండి (24 గంటల లోపు). మీ డేటా అంతా అలాగే ఉంటుంది.'
+                : 'On the sign-in screen tap <b>Forgot password?</b> and enter your username. If you saved an email when registering, a reset link is sent to it. If not, ask Bhagath: after he taps <b>Reset</b>, open <b>Register</b> and use the SAME username with a new password (within 24 hours). All your data stays.';
             (c.sections || []).forEach(sec => (sec.items || []).forEach(it => {
                 if (/forgot my password|పాస్‌వర్డ్ మర్చిపోయాను/.test(it[0])) it[1] = fix;
             }));
@@ -10953,7 +11017,12 @@
         '🆕 New version available': '🆕 కొత్త వెర్షన్ వచ్చింది', 'Update now': 'ఇప్పుడే అప్‌డేట్',
         'Email': 'ఈమెయిల్', 'Your Email': 'మీ ఈమెయిల్', '(used to sign in & reset password)': '(సైన్ ఇన్ & పాస్‌వర్డ్ రీసెట్ కోసం)',
         'Enter your registered email. We will send you a link to set a new password.': 'మీరు రిజిస్టర్ చేసిన ఈమెయిల్ ఇవ్వండి. కొత్త పాస్‌వర్డ్ పెట్టుకునే లింక్ పంపుతాం.',
-        '📧 Send reset link': '📧 రీసెట్ లింక్ పంపండి', 'Signing in…': 'సైన్ ఇన్ అవుతోంది…', 'Creating account…': 'అకౌంట్ తయారవుతోంది…',
+        '📧 Send reset link': '📧 రీసెట్ లింక్ పంపండి', '🔑 Reset password': '🔑 పాస్‌వర్డ్ రీసెట్',
+        '(optional – to reset your password yourself)': '(ఐచ్ఛికం – మీరే పాస్‌వర్డ్ రీసెట్ చేసుకోవడానికి)',
+        'Enter your username. If you saved an email, we will send a reset link. Otherwise Bhagath will help you reset it.': 'మీ యూజర్‌నేమ్ ఇవ్వండి. ఈమెయిల్ ఇచ్చి ఉంటే రీసెట్ లింక్ పంపుతాం. లేకపోతే భగత్ రీసెట్ చేస్తారు.',
+        '✅ New password saved! Sign in now with your new password.': '✅ కొత్త పాస్‌వర్డ్ సేవ్ అయింది! ఇప్పుడు కొత్త పాస్‌వర్డ్‌తో సైన్ ఇన్ చేయండి.',
+        'This password was reset. Please sign in with your new password.': 'ఈ పాస్‌వర్డ్ రీసెట్ అయింది. కొత్త పాస్‌వర్డ్‌తో సైన్ ఇన్ చేయండి.',
+        'Please enter a valid email address, or leave it empty.': 'సరైన ఈమెయిల్ ఇవ్వండి, లేదా ఖాళీగా వదిలేయండి.', 'Signing in…': 'సైన్ ఇన్ అవుతోంది…', 'Creating account…': 'అకౌంట్ తయారవుతోంది…',
         'Incorrect email or password.': 'ఈమెయిల్ లేదా పాస్‌వర్డ్ తప్పు.',
         'Please enter your email and password.': 'ఈమెయిల్ మరియు పాస్‌వర్డ్ ఇవ్వండి.',
         'Please sign in with the email you registered with.': 'మీరు రిజిస్టర్ చేసిన ఈమెయిల్‌తో సైన్ ఇన్ చేయండి.',

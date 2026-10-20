@@ -47,9 +47,10 @@ PART C – BHAGATH NI ADMIN CHEYYADAM  (okkasari)
 ------------------------------------------------
 C1. Website open -> lamp on -> "Register"
       Full Name: Bhagath     Phone: Bhagath number
-      Email: Bhagath Gmail   Username: bhagath     Password: (6+ letters)
+      Email: Bhagath Gmail   <- Bhagath ki EMAIL TAPPAKUNDA ivvandi (Bhagath password marchipothe idhe daari)
+      Username: bhagath      Password: (6+ letters)
     -> Create Account
-C2. Sign in try chesthe "waiting for Bhagath's approval" vastundi. Idi NORMAL.
+C2. Sign in (username: bhagath) try chesthe "waiting for Bhagath's approval" vastundi. Idi NORMAL.
 C3. Firebase Console -> Authentication -> "Users" tab
     -> Bhagath email row lo "User UID" (long code, e.g. Xy12Ab...) -> copy
        (UID meeda mouse pedithe copy icon vastundi)
@@ -58,17 +59,25 @@ C4. Firestore Database -> "Data" tab -> "+ Start collection"
       Document ID:    (C3 lo copy chesina UID paste)
       Field:  role     Type: string     Value: admin
     -> Save
-C5. Website lo Bhagath sign in -> admin portal open avtundi ✅
-    Profile lo Bhagath phone number save cheyandi (members ki contact ga kanipistundi).
+C5. Website lo username "bhagath" + password tho sign in -> admin portal open avtundi ✅
 
 
 PART D – MEMBERS JOIN AVVADAM
 ------------------------------
-- Members website link open -> Register (Full name, phone, EMAIL, username, password)
+- Members website link open -> Register: Full name, Phone, Username, Password.
+  Email OPTIONAL (unte ivvandi - password marchipothe thame reset chesukovachu).
 - Bhagath: Users Data (Admin Desk) -> Approvals -> ✓ Approve
-- Approve ayyaka members thama EMAIL + password tho sign in avtaru.
-- Password marchipothe: "Forgot password?" -> email -> reset link mail ki vastundi (spam folder kooda chudandi).
-- Bhagath "Reset Password" button nokkithe aa member email ki reset link veltundi.
+- Login eppudu USERNAME + PASSWORD tho ne (email tho kaadu).
+
+PASSWORD MARCHIPOTHE
+- Email ichina member: Sign in -> "Forgot password?" -> username -> reset link email ki vastundi
+  (spam folder kooda chudandi) -> kotha password -> username tho sign in.
+- Email ivvani member:
+    1. Bhagath ki cheppali ("Forgot password?" nokkithe WhatsApp open avtundi).
+    2. Bhagath: Admin Desk -> aa member -> "Reset Password" -> OK.
+    3. Member 24 gantala lopu: Register -> SAME username + kotha password -> Create Account.
+    4. Ventane kotha password tho sign in. Passbook / payments anni alaage untayi.
+       Paata password inka pani cheyyadu.
 
 
 PART E – TEST CHECKLIST (2 phones tho)
@@ -80,6 +89,7 @@ PART E – TEST CHECKLIST (2 phones tho)
 [ ] Auction start -> member bid -> rendu phones lo same amount kanipinchindha?
 [ ] Chat message rendu phones lo vachinda?
 [ ] Logout -> malli login (remember me) work avtundha?
+[ ] Email lekunda register ayina member ki Bhagath "Reset Password" -> same username tho register -> kotha password tho login
 
 
 MUKHYAMAINA VISHAYALU
@@ -90,6 +100,7 @@ MUKHYAMAINA VISHAYALU
 - Fresh start: paata demo/test data Firebase ki raadhu.
 - Free (Spark) plan saripotundi: 20 members ki free daily limits (50K reads, 20K writes) lopale untundi.
 - Reject chesina username tho malli register avvalem (vere username vaadali).
+- Bhagath username tho Reset cheyyalem; Bhagath ki email link matrame daari (anduke C1 lo email tappanisari).
 - firebase-config.js lo apiKey public ga undatam safe. Gmail password / service account
   keys maatram evariki ivvakandi.
 - firebase-config.js lo apiKey khaali chesthe app malli offline demo mode lo (okka device) nadustundi.

@@ -5117,6 +5117,132 @@
             color: #b8860b;
             border-color: rgba(212, 175, 55, 0.45);
         }
+
+        /* =====================================================================
+           PHONE LAYOUT (≤ 640px) – app-style: compact header + bottom tab bar.
+           Laptop / desktop layout is not affected.
+           ===================================================================== */
+        @keyframes portalFadeOnly { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 640px) {
+            /* no transform on the page, so the bottom bar can stay fixed to the screen */
+            #portalScreen {
+                animation: portalFadeOnly 0.3s ease forwards !important;
+                padding: 10px 12px calc(84px + env(safe-area-inset-bottom)) !important;
+            }
+
+            /* ---------- compact one-line header ---------- */
+            .portal-header-wrapper { margin: 0 0 12px !important; gap: 0 !important; }
+            .portal-top-bar {
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 8px !important;
+                padding: 8px 8px 8px 14px !important;
+                border-radius: 14px !important;
+            }
+            .welcome-left-group { width: auto !important; flex: 1 1 auto !important; min-width: 0 !important; flex-shrink: 1 !important; }
+            .portal-welcome-text { font-size: 15px !important; overflow: hidden; text-overflow: ellipsis; }
+            .top-bar-divider { display: none !important; }
+            .top-bar-actions { width: auto !important; flex: none !important; gap: 6px !important; justify-content: flex-end !important; }
+            .top-bar-actions > button { height: 34px !important; min-width: 34px; padding: 0 9px !important; font-size: 12px !important; border-radius: 10px !important; }
+            .admin-users-data-btn span, .help-top-txt { display: none !important; }
+            .portal-logout-btn { padding: 0 11px !important; }
+
+            /* ---------- bottom tab bar ---------- */
+            .liquid-nav {
+                position: fixed !important;
+                left: 0 !important; right: 0 !important; bottom: 0 !important;
+                width: 100% !important; max-width: none !important;
+                margin: 0 !important;
+                padding: 4px 6px calc(4px + env(safe-area-inset-bottom)) !important;
+                border-radius: 18px 18px 0 0 !important;
+                background: rgba(13, 16, 25, 0.96) !important;
+                -webkit-backdrop-filter: blur(18px) !important; backdrop-filter: blur(18px) !important;
+                border-top: 1px solid rgba(255, 215, 0, 0.22) !important;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45) !important;
+                justify-content: space-between !important;
+                z-index: 200 !important;
+            }
+            [data-theme="light"] .liquid-nav { background: rgba(255, 255, 255, 0.97) !important; border-top-color: rgba(180, 130, 0, 0.25) !important; box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08) !important; }
+            .liquid-nav::before, .liquid-glare-container, .active-pill, .liquid-nav .divider { display: none !important; }
+            .nav-items { flex: 1 1 auto !important; display: flex !important; justify-content: space-around !important; gap: 0 !important; }
+            .nav-btn { flex: 1 1 0 !important; height: 56px !important; padding: 0 !important; border-radius: 12px !important; }
+            .nav-btn .btn-content { flex-direction: column !important; gap: 3px !important; justify-content: center; }
+            .nav-btn svg { width: 22px; height: 22px; }
+            .nav-btn span, .nav-btn.active span { display: block !important; font-size: 10.5px !important; font-weight: 700 !important; letter-spacing: 0.2px; }
+            .nav-btn.active { color: #ffd700 !important; }
+            [data-theme="light"] .nav-btn.active { color: #b45309 !important; }
+            .nav-btn.active::before {
+                content: ''; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 4px 4px;
+                background: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+            }
+            [data-theme="light"] .nav-btn.active::before { background: #d4a017; }
+            .theme-btn { width: 40px !important; height: 56px !important; margin-left: 0 !important; flex: none; }
+            /* things that sit at the bottom of the screen move above the tab bar */
+            .auction-chat-drawer { z-index: 450 !important; }
+            #fbToast { bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
+
+            /* ---------- cards: same spacing everywhere ---------- */
+            #canvasArea > div, .home-wrapper-compact, .single-month-hero-container, .auction-room-wrapper, .passbook-wrapper { gap: 12px !important; }
+
+            /* home: auction card – badge no longer overlaps the subtitle */
+            .due-card-header { flex-wrap: wrap !important; align-items: flex-start !important; gap: 10px !important; }
+            .due-card-header > .due-title-group { flex: 1 1 200px; min-width: 0; }
+            .due-heading { font-size: 17px !important; }
+            .status-pill {
+                display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex: none;
+                padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+                background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd;
+            }
+            .status-pill.pill-paid { background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.5); color: #4ade80; }
+
+            /* home + passbook: 3 numbers in one row */
+            .pool-metrics-row, .passbook-wrapper .pool-metrics-row { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+            .pool-metric-card { padding: 10px 8px !important; min-width: 0; }
+            .pool-metric-card .metric-title-sm { font-size: 9.5px !important; letter-spacing: 0.3px !important; line-height: 1.25; }
+            .pool-metric-card .metric-value-lg { font-size: 16px !important; line-height: 1.25; word-break: break-word; }
+            .pool-metric-card .metric-value-lg span { display: block; font-size: 10px !important; }
+
+            /* auction room header: back button on top, title full width */
+            .auction-header-card { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; padding: 14px !important; }
+            .auction-header-left { display: grid !important; grid-template-columns: auto 1fr; gap: 10px !important; align-items: center; }
+            .auction-header-left .btn-back-to-lobby { grid-column: 1 / -1; justify-self: start; padding: 6px 10px !important; font-size: 11.5px !important; }
+            .auction-room-icon { width: 40px !important; height: 40px !important; }
+            .auction-header-title { font-size: 17px !important; line-height: 1.25; }
+            .auction-header-subtitle { font-size: 11.5px !important; }
+            .auction-header-badges { flex-wrap: wrap !important; gap: 8px !important; justify-content: flex-start !important; }
+            .auction-header-badges .btn-open-chat { margin-left: auto; }
+
+            /* live participants: title and count on separate lines */
+            .live-participants-header { flex-direction: column !important; align-items: flex-start !important; gap: 4px !important; }
+            .live-participants-title { font-size: 12px !important; }
+
+            /* auction room: pool / take-home / dividend in one row */
+            .auction-metrics-trio { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; margin-bottom: 16px !important; }
+            .metric-trio-box { padding: 10px 6px !important; min-width: 0; }
+            .trio-label { font-size: 9.5px !important; letter-spacing: 0.3px !important; line-height: 1.25; }
+            .trio-val { font-size: 16px !important; }
+            .hero-lead-bid-val { font-size: 46px !important; }
+
+            /* activity feed: time stays on one line */
+            .panel-card-header { gap: 8px; }
+            .panel-card-header .panel-title { font-size: 14px !important; }
+            .panel-card-header > span:last-child { white-space: nowrap; flex: none; font-size: 10.5px !important; }
+            .feed-item { gap: 10px; font-size: 12.5px !important; }
+            .feed-item > span:last-child { white-space: nowrap; flex: none; margin-left: 0 !important; }
+
+            /* auction overview card */
+            .single-month-heading { font-size: 20px !important; }
+            .single-card-topbar { gap: 10px !important; }
+            .single-stat-box { padding: 10px 12px !important; }
+
+            /* modals sit above the tab bar and leave room at the bottom */
+            #usersDataModal, #utrModal, #userPayQrModal, #helpDeskModal, #winnerDetailModal { padding-bottom: env(safe-area-inset-bottom); }
+        }
+        @media (max-width: 360px) {
+            .portal-welcome-text { font-size: 14px !important; }
+            .nav-btn span, .nav-btn.active span { font-size: 9.5px !important; }
+            .pool-metric-card .metric-value-lg, .trio-val { font-size: 14px !important; }
+        }
     </style>
 </head>
 <body data-on="false">
@@ -10043,15 +10169,12 @@
                             ${hasWinner ? `
                                 <div style="padding: 10px 0;">
                                     <div style="font-size: 42px; margin-bottom: 6px;">🏆</div>
-                                    <span style="font-size: 13px; color: #4ade80; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">MONTH 01 AUCTION WINNER</span>
+                                    <span style="font-size: 13px; color: #4ade80; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">MONTH ${pbPad(getCurrentChitMonth())} AUCTION WINNER</span>
                                     <div class="hero-lead-bid-val" style="color: #4ade80 !important;">₹${st.currentBid.toLocaleString('en-IN')}</div>
                                     <div class="hero-lead-bidder-name">Winner: <b style="color: #ffd700; font-size: 20px;">${st.winner}</b></div>
                                     <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 14px; padding: 14px; max-width: 560px; margin: 0 auto; color: #f1f5f9; font-size: 14px;">
                                         ✨ Take-Home Cash: <b style="color: #4ade80;">₹${(st.winnerPrize || takeHomePrize).toLocaleString('en-IN')}</b> | Dividend (20 Members): <b style="color: #38bdf8;">₹${st.dividend.toLocaleString('en-IN')} / member</b>
                                     </div>
-                                    <p style="font-size: 12px; color: #ffd700; margin-top: 14px;">
-                                        ⚡ Home Page Due Card & Next Month 5th Countdown auto-synced!
-                                    </p>
                                 </div>
                             ` : `
                                 <span style="font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Current Leading Bid Discount</span>
@@ -10779,6 +10902,8 @@
             const currentUser = document.getElementById('portalWelcomeTitle').innerText;
             const isAdmin = currentUser.toLowerCase().includes('admin') || currentUser.toLowerCase().includes('bhagath');
             renderCanvasContent(tab, isAdmin);
+            // phone: a new tab opens from the top, like an app
+            if (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) { try { window.scrollTo(0, 0); } catch(e) {} }
         });
     });
 

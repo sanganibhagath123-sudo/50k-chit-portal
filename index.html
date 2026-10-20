@@ -4302,7 +4302,11 @@
         .ups-copied { min-height: 18px; font-size: 12px; color: #4ade80; text-align: center; margin: 2px 0 8px; }
         .ups-open { width: 100%; border: 0; border-radius: 14px; padding: 14px; font-size: 16px; font-weight: 800; cursor: pointer; color: #fff;
             background: linear-gradient(135deg, #5f259f, #7b3fe4); box-shadow: 0 8px 24px rgba(95,37,159,0.45); }
-        .ups-steps { margin: 14px 0 0; padding-left: 20px; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; }
+        .ups-row-main { border-color: rgba(255, 215, 0, 0.45); background: rgba(255, 215, 0, 0.08); }
+        .ups-row-main b { font-size: 18px; letter-spacing: 0.5px; color: #ffd700; }
+        .ups-warn { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: #fbbf24; text-align: center; }
+        [data-theme="light"] .ups-row-main b { color: #b45309; }
+        .ups-steps { margin: 4px 0 14px; padding-left: 20px; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; }
         [data-theme="light"] .ups-card { background: #fff; color: #0f172a; }
         [data-theme="light"] .ups-steps, [data-theme="light"] .ups-title { color: #334155; }
         [data-theme="light"] .ups-amount { color: #b45309; }
@@ -5369,26 +5373,26 @@
 <!-- Member Payment QR Scanner Modal (opened from Home first grid) -->
 <!-- UPI pay sheet -->
 <div id="upiPaySheet" class="ups-modal" style="display: none;" onclick="if (event.target === this) closeUpiPaySheet()">
-    <div class="ups-card" role="dialog" aria-label="Pay with UPI">
+    <div class="ups-card" role="dialog" aria-label="Pay Bhagath">
         <button type="button" class="ups-x" onclick="closeUpiPaySheet()" aria-label="Close">✕</button>
         <div class="ups-title">Pay Bhagath</div>
         <div class="ups-amount" id="upsAmount">₹0</div>
-        <div class="ups-row">
-            <div><small>UPI ID</small><b id="upsUpi">-</b></div>
-            <button type="button" onclick="upsCopy('upi')">Copy</button>
+        <div class="ups-row ups-row-main" id="upsPhoneRow">
+            <div><small>Bhagath’s mobile number</small><b id="upsPhone">-</b></div>
+            <button type="button" onclick="upsCopy('phone')">Copy</button>
         </div>
         <div class="ups-row">
-            <div><small>Amount</small><b>Enter this amount in the app</b></div>
+            <div><small>Amount</small><b id="upsAmountSmall">₹0</b></div>
             <button type="button" onclick="upsCopy('amount')">Copy</button>
         </div>
+        <div class="ups-row">
+            <div><small>Or UPI ID</small><b id="upsUpi">-</b></div>
+            <button type="button" onclick="upsCopy('upi')">Copy</button>
+        </div>
         <div class="ups-copied" id="upsCopied"></div>
-        <button type="button" class="ups-open" id="upsOpenBtn" onclick="upsOpenApp()">Open PhonePe →</button>
-        <ol class="ups-steps">
-            <li><span id="upsAppName">PhonePe</span> opens with Bhagath’s UPI ID.</li>
-            <li>Type the amount shown above and pay.</li>
-            <li>If it shows an error: open the app yourself → <b>To UPI ID</b> → paste the copied ID → pay.</li>
-            <li>Come back here, tap <b>I Have Paid</b> and enter the 12-digit UTR.</li>
-        </ol>
+        <ol class="ups-steps" id="upsSteps"></ol>
+        <button type="button" class="ups-open" onclick="upsPaidNow()">✅ I have paid – enter UTR</button>
+        <p class="ups-warn">⚠️ Type the exact amount shown above. Check that the name shown in your app is Bhagath before you pay.</p>
     </div>
 </div>
 
@@ -6932,32 +6936,62 @@
         try { if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).catch(() => {}); } catch(e) {}
         return Promise.resolve();
     }
+    // Bhagath's number: his profile (members get it from the public contact doc)
+    function getPayPhone() {
+        const d = profileDigits((getMemberProfile('bhagath') || {}).phone || '');
+        return d ? d.slice(-10) : '';
+    }
+    const PAY_APP_STEPS = {
+        phonepe: { name: 'PhonePe', to: 'To Mobile Number', upi: 'To UPI ID' },
+        gpay:    { name: 'Google Pay', to: 'Pay phone number', upi: 'Pay UPI ID or number' },
+        upi:     { name: 'your UPI app', to: 'Pay to mobile number', upi: 'Pay to UPI ID' }
+    };
+    let upsUser = '';
     function triggerUpiPayment(mode, dueAmount) {
         const amount = Math.max(0, Math.round(Number(dueAmount) || getUserDueAmount(getChatActiveUser()).due));
+        const app = PAY_APP_STEPS[mode] || PAY_APP_STEPS.upi;
+        const phone = getPayPhone();
         const id = getPayUpiId();
-        copyText(id);
-        const appName = mode === 'phonepe' ? 'PhonePe' : (mode === 'gpay' ? 'Google Pay' : 'UPI app');
+        upsUser = getChatActiveUser();
         const m = document.getElementById('upiPaySheet');
         if (!m) return;
-        m.dataset.mode = mode || 'upi';
-        document.getElementById('upsAmount').innerText = '₹' + amount.toLocaleString('en-IN');
-        document.getElementById('upsAmount').dataset.amt = String(amount);
+        const amtTxt = '₹' + amount.toLocaleString('en-IN');
+        const amtEl = document.getElementById('upsAmount');
+        amtEl.innerText = amtTxt; amtEl.dataset.amt = String(amount);
+        document.getElementById('upsAmountSmall').innerText = amtTxt;
         document.getElementById('upsUpi').innerText = id;
-        document.getElementById('upsOpenBtn').innerText = `Open ${appName} →`;
-        document.getElementById('upsAppName').innerText = appName;
-        document.getElementById('upsCopied').innerText = '✅ UPI ID copied';
+        document.getElementById('upsPhone').innerText = phone ? (phone.slice(0, 5) + ' ' + phone.slice(5)) : 'Not saved yet – use the UPI ID below';
+        document.getElementById('upsPhoneRow').style.display = '';
+        const steps = phone ? [
+            `Open <b>${app.name}</b> yourself (do not use any link).`,
+            `Tap <b>${app.to}</b> and paste Bhagath’s number (already copied).`,
+            `Check the name shown is <b>Bhagath</b>.`,
+            `Type <b>${amtTxt}</b> and pay with your UPI PIN.`,
+            `Copy the 12-digit <b>UTR</b> from the success screen, then tap the button below.`
+        ] : [
+            `Open <b>${app.name}</b> yourself (do not use any link).`,
+            `Tap <b>${app.upi}</b> and paste the UPI ID (already copied).`,
+            `Check the name shown is <b>Bhagath</b>.`,
+            `Type <b>${amtTxt}</b> and pay with your UPI PIN.`,
+            `Copy the 12-digit <b>UTR</b> from the success screen, then tap the button below.`
+        ];
+        document.getElementById('upsSteps').innerHTML = steps.map(x => `<li>${x}</li>`).join('');
+        copyText(phone || id);
+        document.getElementById('upsCopied').innerText = phone ? '✅ Bhagath’s number copied' : '✅ UPI ID copied';
         m.style.display = 'grid';
     }
     function closeUpiPaySheet() { const m = document.getElementById('upiPaySheet'); if (m) m.style.display = 'none'; }
     function upsCopy(what) {
         const amt = document.getElementById('upsAmount').dataset.amt || '';
-        copyText(what === 'amount' ? amt : getPayUpiId());
-        document.getElementById('upsCopied').innerText = what === 'amount' ? '✅ Amount copied' : '✅ UPI ID copied';
+        const map = { amount: [amt, '✅ Amount copied'], phone: [getPayPhone(), '✅ Bhagath’s number copied'], upi: [getPayUpiId(), '✅ UPI ID copied'] };
+        const [val, msg] = map[what] || map.upi;
+        if (!val) return;
+        copyText(val);
+        document.getElementById('upsCopied').innerText = msg;
     }
-    function upsOpenApp() {
-        const m = document.getElementById('upiPaySheet');
-        copyText(getPayUpiId());
-        window.location.href = upiAppUrl((m && m.dataset.mode) || 'upi');
+    function upsPaidNow() {
+        closeUpiPaySheet();
+        openUtrModal(upsUser || getChatActiveUser());
     }
 
     // =========================================
@@ -9513,7 +9547,7 @@
                         <!-- 1. Authentic PhonePe Button -->
                         <button class="btn-pay-phonepe-branded" onclick="triggerUpiPayment('phonepe', ${displayDueAmount})">
                             <span class="phonepe-logo-badge">Pe</span>
-                            <span>Pay ₹${displayDueAmount.toLocaleString('en-IN')} on PhonePe</span>
+                            <span>Pay ₹${displayDueAmount.toLocaleString('en-IN')} via PhonePe</span>
                         </button>
 
                         <!-- 2. Authentic Google Pay & Copy UPI Row -->
@@ -11420,7 +11454,9 @@
         '⏰ Auction time! Waiting for Bhagath to start.': '⏰ వేలం సమయం! భగత్ స్టార్ట్ చేయడం కోసం వేచి ఉంది.',
         '⏰ Auction time! Waiting for Bhagath to open the next month.': '⏰ వేలం సమయం! భగత్ తదుపరి నెల తెరవడం కోసం వేచి ఉంది.',
         'Only Bhagath (admin) can start the auction.': 'భగత్ (అడ్మిన్) మాత్రమే వేలం స్టార్ట్ చేయగలరు.',
-        'Pay Bhagath': 'భగత్‌కి చెల్లించండి', 'UPI ID': 'UPI ID', 'Amount': 'మొత్తం', 'Enter this amount in the app': 'ఈ మొత్తం యాప్‌లో ఎంటర్ చేయండి',
+        'Pay Bhagath': 'భగత్‌కి చెల్లించండి', 'Bhagath’s mobile number': 'భగత్ మొబైల్ నంబర్', 'Or UPI ID': 'లేదా UPI ID',
+        '✅ Bhagath’s number copied': '✅ భగత్ నంబర్ కాపీ అయింది', '✅ I have paid – enter UTR': '✅ చెల్లించాను – UTR ఇవ్వండి',
+        '⚠️ Type the exact amount shown above. Check that the name shown in your app is Bhagath before you pay.': '⚠️ పైన చూపిన మొత్తమే టైప్ చేయండి. చెల్లించే ముందు యాప్‌లో పేరు భగత్ అని ఉందో చూసుకోండి.', 'UPI ID': 'UPI ID', 'Amount': 'మొత్తం', 'Enter this amount in the app': 'ఈ మొత్తం యాప్‌లో ఎంటర్ చేయండి',
         'Copy': 'కాపీ', '✅ UPI ID copied': '✅ UPI ID కాపీ అయింది', '✅ Amount copied': '✅ మొత్తం కాపీ అయింది',
         'Type the amount shown above and pay.': 'పైన చూపిన మొత్తం టైప్ చేసి చెల్లించండి.',
         'Bid discount': 'బిడ్ డిస్కౌంట్', 'Take-home': 'చేతికి వచ్చేది', 'Dividend each': 'ఒక్కొక్కరికి డివిడెండ్', 'Close': 'మూసివేయి',

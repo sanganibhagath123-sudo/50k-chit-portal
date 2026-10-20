@@ -1,0 +1,95 @@
+50K CHIT PORTAL – FIREBASE SETUP (okkasari chesthe chalu)
+==========================================================
+Mee project: k-chit-d0394   (config already firebase-config.js lo pettanu)
+
+Anni steps https://console.firebase.google.com lo, k-chit-d0394 project open chesi cheyyali.
+
+
+PART A – FIREBASE CONSOLE LO 4 SETTINGS  (10 nimishalu)
+---------------------------------------------------------
+A1. Login (Email/Password) ON cheyyadam
+    Left menu -> Build -> Authentication -> "Get started"
+    -> "Sign-in method" tab -> "Email/Password" click
+    -> PAINA unna first switch "Enable" ON  (kinda "Email link" switch OFF ga undanivvandi)
+    -> Save
+
+A2. Database create cheyyadam
+    Left menu -> Build -> Firestore Database -> "Create database"
+    -> Location: asia-south1 (Mumbai)        <- idi tarvata maarchalem, jagratha
+    -> "Start in production mode" -> Create
+
+A3. Security rules pettadam  (passbook privacy idhe kapadutundi)
+    Firestore Database -> paina "Rules" tab
+    -> akkada unna text MOTHAM delete cheyandi
+    -> ee folder lo unna  firestore.rules  file open chesi (Notepad), motham copy chesi akkada paste
+    -> "Publish" click
+
+A4. Mee website address allow cheyyadam
+    Authentication -> "Settings" tab -> "Authorized domains" -> "Add domain"
+    -> type cheyandi:   <mee-github-username>.github.io
+       (e.g. github username "lakshmi123" aithe  lakshmi123.github.io)
+    -> Add
+
+(Optional) Authentication -> Templates -> "Password reset" -> pencil icon ->
+    Sender name: 50K Chit  -> Save.  (Reset mail lo ee peru kanipistundi)
+
+
+PART B – GITHUB LO UPLOAD
+--------------------------
+B1. Mee repo -> "Add file" -> "Upload files"
+B2. Ee folder lo unna ANNI files drag cheyandi (firebase-config.js, firestore.rules kooda)
+    -> "Commit changes"
+B3. Settings -> Pages -> Branch: main, folder: / (root) -> Save
+    1-2 nimishala tarvata website link vastundi:  https://<username>.github.io/<repo-name>/
+
+
+PART C – BHAGATH NI ADMIN CHEYYADAM  (okkasari)
+------------------------------------------------
+C1. Website open -> lamp on -> "Register"
+      Full Name: Bhagath     Phone: Bhagath number
+      Email: Bhagath Gmail   Username: bhagath     Password: (6+ letters)
+    -> Create Account
+C2. Sign in try chesthe "waiting for Bhagath's approval" vastundi. Idi NORMAL.
+C3. Firebase Console -> Authentication -> "Users" tab
+    -> Bhagath email row lo "User UID" (long code, e.g. Xy12Ab...) -> copy
+       (UID meeda mouse pedithe copy icon vastundi)
+C4. Firestore Database -> "Data" tab -> "+ Start collection"
+      Collection ID:  admins        -> Next
+      Document ID:    (C3 lo copy chesina UID paste)
+      Field:  role     Type: string     Value: admin
+    -> Save
+C5. Website lo Bhagath sign in -> admin portal open avtundi ✅
+    Profile lo Bhagath phone number save cheyandi (members ki contact ga kanipistundi).
+
+
+PART D – MEMBERS JOIN AVVADAM
+------------------------------
+- Members website link open -> Register (Full name, phone, EMAIL, username, password)
+- Bhagath: Users Data (Admin Desk) -> Approvals -> ✓ Approve
+- Approve ayyaka members thama EMAIL + password tho sign in avtaru.
+- Password marchipothe: "Forgot password?" -> email -> reset link mail ki vastundi (spam folder kooda chudandi).
+- Bhagath "Reset Password" button nokkithe aa member email ki reset link veltundi.
+
+
+PART E – TEST CHECKLIST (2 phones tho)
+---------------------------------------
+[ ] Phone 1 lo Bhagath, Phone 2 lo oka member sign in
+[ ] Member "I Have Paid" + UTR -> Bhagath Admin Desk lo kanipinchindha? Approve
+[ ] Member passbook lo Paid 🟢 vachinda?
+[ ] Member passbook lo vere members details kanipinchakoodadhu
+[ ] Auction start -> member bid -> rendu phones lo same amount kanipinchindha?
+[ ] Chat message rendu phones lo vachinda?
+[ ] Logout -> malli login (remember me) work avtundha?
+
+
+MUKHYAMAINA VISHAYALU
+----------------------
+- Data ippudu Firebase lo untundi: ye phone nunchi login ayina same data.
+- Passbook, payments, UTR, profile, surety: aa member + Bhagath (+ permission unna co-admin) ki matrame.
+  Vere members ki "paid / not paid" status matrame kanipistundi, amount/UTR kaadu.
+- Fresh start: paata demo/test data Firebase ki raadhu.
+- Free (Spark) plan saripotundi: 20 members ki free daily limits (50K reads, 20K writes) lopale untundi.
+- Reject chesina username tho malli register avvalem (vere username vaadali).
+- firebase-config.js lo apiKey public ga undatam safe. Gmail password / service account
+  keys maatram evariki ivvakandi.
+- firebase-config.js lo apiKey khaali chesthe app malli offline demo mode lo (okka device) nadustundi.

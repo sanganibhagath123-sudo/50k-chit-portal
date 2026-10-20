@@ -4121,6 +4121,10 @@
         .auth-msg.show { display: block; }
         .auth-msg.is-err { color: #fca5a5; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); }
         .auth-msg.is-ok { color: #86efac; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.4); }
+        #fbToast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(20px); z-index: 100000; max-width: calc(100vw - 32px);
+            background: rgba(20, 22, 30, 0.95); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.45); border-radius: 12px; padding: 10px 16px;
+            font-size: 0.85rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+        #fbToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .auth-msg.is-info { color: #fde68a; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); }
 
         .login-form.shake { animation: formShake 0.4s ease; }
@@ -5475,6 +5479,10 @@
                 <label>Phone Number</label>
                 <input type="tel" id="regPhone" placeholder="10-digit mobile" maxlength="15" inputmode="tel" autocomplete="tel" />
             </div>
+            <div class="form-group" id="regEmailGroup" style="display: none;">
+                <label>Email <span class="label-hint">(used to sign in &amp; reset password)</span></label>
+                <input type="email" id="regEmail" placeholder="you@gmail.com" maxlength="80" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="email" />
+            </div>
             <div class="form-group">
                 <label>Choose Username <span class="label-hint">(lowercase letters, numbers, _ only)</span></label>
                 <input type="text" name="username" id="regUsername" placeholder="e.g. kiran20" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" oninput="this.value = this.value.toLowerCase().replace(/\s/g, '')" />
@@ -5670,7 +5678,601 @@
 <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
 <script src="https://unpkg.com/gsap@3/dist/Draggable.min.js"></script>
 
+<!-- Firebase settings (fill in firebase-config.js; if that file is missing the app runs in offline demo mode) -->
+<script src="firebase-config.js"></script>
+
 <script>
+    // =====================================================================
+    // FIREBASE LAYER
+    // When window.FIREBASE_CONFIG is filled in, the app runs on Firebase:
+    //  • Login = Firebase Authentication (email + password)
+    //  • Data  = Firestore, kept in sync with the app's local cache in real time
+    // When it is empty, the app keeps working in offline demo mode (this device only).
+    // =====================================================================
+    const FB_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+    const FB_CFG = window.__FB_TEST_CONFIG || window.FIREBASE_CONFIG || null;
+    const FB_MODE = !!(FB_CFG && FB_CFG.apiKey && FB_CFG.projectId);
+    const FB = {
+        on: false, app: null, auth: null, db: null, A: null, F: null,
+        user: null, uid: null, username: null, isAdmin: false,
+        unsubs: [], applying: false, last: {}, shardData: {}, board: {}, publicDoc: {},
+        q: {}, dirty: new Set(), refreshTimer: null, deferred: false, gotMembers: false
+    };
+
+    // localStorage key  →  Firestore document in "shared" (group data)
+    const FB_SHARED = {
+        chit_auction_state: 'auction', chit_auction_history: 'history', chit_current_month: 'month',
+        chit_custom_auction_schedule: 'schedule', chit_monthly_banner: 'banner', chit_payment_qr: 'qr',
+        chit_group_announcements: 'announcements', chit_coadmins: 'coadmins'
+    };
+    // localStorage key (an object keyed by member name)  →  one private document per member
+    const FB_SHARDED = {
+        chit_member_profiles: 'profiles', chit_monthly_payments: 'payments',
+        chit_passbook_history: 'passbook', chit_surety: 'surety'
+    };
+    const FB_SYNCED_KEYS = [...Object.keys(FB_SHARED), ...Object.keys(FB_SHARDED), 'chit_50k_members', 'chit_auction_chat'];
+
+    // ---- intercept the app's own localStorage writes ----
+    const _lsSet = Storage.prototype.setItem;
+    const _lsRemove = Storage.prototype.removeItem;
+    Storage.prototype.setItem = function(k, v) {
+        _lsSet.call(this, k, v);
+        if (this === window.localStorage && FB.on && FB.user && !FB.applying) fbLocalChanged(k, String(v));
+    };
+    Storage.prototype.removeItem = function(k) {
+        _lsRemove.call(this, k);
+        if (this === window.localStorage && FB.on && FB.user && !FB.applying) fbLocalChanged(k, null);
+    };
+    function fbRawSet(k, v) {
+        FB.applying = true;
+        try { if (v === null || v === undefined) _lsRemove.call(localStorage, k); else _lsSet.call(localStorage, k, v); }
+        finally { FB.applying = false; }
+    }
+    function fbClearCache() { FB_SYNCED_KEYS.forEach(k => fbRawSet(k, null)); FB.last = {}; }
+
+    function fbToday() { return new Date().toLocaleDateString('en-IN'); }
+
+    // ---- small toast for save errors ----
+    function fbToast(msg) {
+        let t = document.getElementById('fbToast');
+        if (!t) { t = document.createElement('div'); t.id = 'fbToast'; document.body.appendChild(t); }
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._h);
+        t._h = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+    function fbWriteError(e) {
+        console.warn('[firebase] write failed', e);
+        if (e && e.code === 'permission-denied') fbToast('⚠️ Not allowed to save this change.');
+        else if (e && /exceeds|too large|size/i.test(String(e.message || ''))) fbToast('⚠️ File too large to save. Please use a smaller image.');
+        else fbToast('⚠️ Could not save. Check your internet connection.');
+    }
+    function fbListenError(e) { console.warn('[firebase] listener error', e); }
+
+    function fbAuthErrorText(e) {
+        const c = (e && e.code) || '';
+        if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return 'Incorrect email or password.';
+        if (/email-already-in-use/.test(c)) return 'An account with this email already exists. Please sign in.';
+        if (/invalid-email/.test(c)) return 'Please enter a valid email address.';
+        if (/weak-password/.test(c)) return 'Password must be at least 6 characters.';
+        if (/too-many-requests/.test(c)) return 'Too many attempts. Please wait a few minutes and try again.';
+        if (/network-request-failed/.test(c)) return 'No internet connection. Please try again.';
+        if (/requires-recent-login/.test(c)) return 'Please sign out and sign in again, then retry.';
+        return 'Something went wrong (' + (c || (e && e.message) || 'unknown') + ').';
+    }
+
+    // ---- load the Firebase SDK (ES modules from Google's CDN) ----
+    async function fbLoad() {
+        const [appM, authM, fsM] = await Promise.all([
+            import(FB_SDK + 'firebase-app.js'),
+            import(FB_SDK + 'firebase-auth.js'),
+            import(FB_SDK + 'firebase-firestore.js')
+        ]);
+        FB.app = appM.initializeApp(FB_CFG);
+        FB.A = authM; FB.F = fsM;
+        FB.auth = authM.getAuth(FB.app);
+        FB.db = fsM.getFirestore(FB.app);
+    }
+
+    // ---- permission mirrors (the real checks live in firestore.rules) ----
+    function fbStaff(perm) {
+        if (FB.isAdmin) return true;
+        const rec = getCoAdmins()[FB.username || ''];
+        return !!(rec && rec[perm]);
+    }
+    function fbCanReadAll(coll) {
+        if (coll === 'profiles') return FB.isAdmin || fbStaff('members');
+        if (coll === 'surety') return FB.isAdmin;
+        return fbStaff('payments');
+    }
+    function fbCanWriteShard(coll, name, deleting) {
+        const own = name === FB.username;
+        if (coll === 'profiles') return own || FB.isAdmin;
+        if (coll === 'payments') {
+            if (deleting) return fbStaff('payments') || fbStaff('auction');
+            return own || (fbStaff('payments') && (FB.isAdmin || !own));
+        }
+        if (coll === 'passbook') return fbStaff('payments') && (FB.isAdmin || !own);
+        if (coll === 'surety') return own || FB.isAdmin;
+        return false;
+    }
+
+    // ---- local change → Firestore (debounced per key) ----
+    function fbQueue(key, fn) {
+        FB.q[key] = fn;
+        if (FB.q[key + ':t']) return;
+        FB.q[key + ':t'] = setTimeout(() => {
+            const run = FB.q[key];
+            FB.q[key] = null; FB.q[key + ':t'] = null;
+            try { const p = run && run(); if (p && p.catch) p.catch(fbWriteError); } catch(e) { fbWriteError(e); }
+        }, 60);
+    }
+
+    function fbLocalChanged(k, v) {
+        if (k === 'chit_auction_state' && v) {
+            // getAuctionState() creates a blank default when nothing is cached yet; never upload that
+            try { if (!JSON.parse(v).updatedAt) return; } catch(e) { return; }
+        }
+        if (FB_SHARED[k]) return fbQueue('s:' + k, () => fbWriteShared(k, v));
+        if (FB_SHARDED[k]) return fbQueue('p:' + k, () => fbWriteShards(k, v));
+        if (k === 'chit_auction_chat') return fbQueue('chat', () => fbWriteChat(v));
+        if (k === 'chit_50k_members') return fbQueue('members', () => fbWriteMembers(v));
+    }
+
+    function fbWriteShared(k, v) {
+        const F = FB.F, name = FB_SHARED[k];
+        const data = { json: v, by: FB.username, at: F.serverTimestamp() };
+        if (name === 'coadmins') { try { data.map = JSON.parse(v || '{}') || {}; } catch(e) { data.map = {}; } }
+        return F.setDoc(F.doc(FB.db, 'shared', name), data).catch(fbWriteError);
+    }
+
+    function fbWriteShards(k, v) {
+        const F = FB.F, coll = FB_SHARDED[k];
+        const prev = FB.last[k] || {};
+        let next = {};
+        if (v) { try { next = JSON.parse(v) || {}; } catch(e) { next = {}; } }
+        const names = new Set([...Object.keys(prev), ...Object.keys(next)]);
+        const jobs = [];
+        names.forEach(n => {
+            const a = prev[n], b = next[n];
+            if (JSON.stringify(a) === JSON.stringify(b)) return;
+            if (!fbCanWriteShard(coll, n, b === undefined)) return;
+            const ref = F.doc(FB.db, coll, n);
+            if (b === undefined) {
+                jobs.push(F.deleteDoc(ref).catch(fbWriteError));
+            } else {
+                const data = { json: JSON.stringify(b), by: FB.username, at: F.serverTimestamp() };
+                if (coll === 'payments') data.status = b.status || 'pending';
+                if (coll === 'surety') data.status = b.prizeReleased ? 'released' : (b.status || 'required');
+                jobs.push(F.setDoc(ref, data).catch(fbWriteError));
+                if (coll === 'profiles' && n === FB.username && FB.isAdmin) {
+                    jobs.push(F.setDoc(F.doc(FB.db, 'shared', 'public'), { adminPhone: b.phone || '' }, { merge: true }).catch(fbWriteError));
+                }
+            }
+            if (coll === 'payments' || coll === 'surety') fbBoardUpdate(coll, n, b);
+        });
+        FB.last[k] = next;
+        return Promise.all(jobs);
+    }
+
+    function fbBoardUpdate(coll, n, b) {
+        const F = FB.F;
+        const key = (coll === 'payments' ? 'pay_' : 'sr_') + n;
+        let val = null;
+        if (b) val = coll === 'payments' ? (b.status || 'pending') : (b.prizeReleased ? 'released' : (b.status || 'required'));
+        const own = n === FB.username;
+        const staff = coll === 'payments' ? (fbStaff('payments') || fbStaff('auction')) : FB.isAdmin;
+        if (!staff && !(own && val === 'submitted')) return;
+        F.setDoc(F.doc(FB.db, 'shared', 'board'), { [key]: val === null ? F.deleteField() : val }, { merge: true }).catch(fbWriteError);
+    }
+
+    async function fbWriteChat(v) {
+        const F = FB.F;
+        if (v === null) {
+            if (!fbStaff('auction')) return;
+            const qs = await F.getDocs(F.collection(FB.db, 'chat'));
+            const batch = F.writeBatch(FB.db);
+            qs.forEach(d => batch.delete(d.ref));
+            return batch.commit().catch(fbWriteError);
+        }
+        let next = [];
+        try { next = JSON.parse(v) || []; } catch(e) {}
+        const key = m => m.ts + '|' + String(m.user || '').toLowerCase();
+        const seen = new Set((FB.last.chat || []).map(key));
+        const jobs = next
+            .filter(m => !seen.has(key(m)) && (m.user || '').toLowerCase() === FB.username)
+            .map(m => F.addDoc(F.collection(FB.db, 'chat'), {
+                user: FB.username, text: String(m.text || '').slice(0, 200), isAdmin: !!FB.isAdmin,
+                ts: m.ts || Date.now(), time: m.time || ''
+            }).catch(fbWriteError));
+        return Promise.all(jobs);
+    }
+
+    function fbWriteMembers(v) {
+        const F = FB.F;
+        let next = [];
+        try { next = JSON.parse(v) || []; } catch(e) {}
+        const prev = {};
+        (FB.last.members || []).forEach(m => { prev[(m.username || '').toLowerCase()] = m; });
+        const jobs = [];
+        next.forEach(m => {
+            const key = (m.username || '').toLowerCase();
+            const p = prev[key];
+            if (!p) return;                                    // only existing server records
+            if ((p.status || '') === (m.status || '')) return; // only approve / reject changes
+            if (!fbStaff('members')) return;
+            const data = { status: m.status, updatedAt: Date.now() };
+            if (m.status === 'approved') data.approvedAt = m.approvedAt || fbToday();
+            jobs.push(F.setDoc(F.doc(FB.db, 'members', key), data, { merge: true }).catch(fbWriteError));
+        });
+        return Promise.all(jobs);
+    }
+
+    // ---- Firestore → local cache (live) ----
+    function fbParseShard(coll, d) {
+        let o = {};
+        try { o = JSON.parse(d.json || '{}') || {}; } catch(e) {}
+        if (coll === 'payments' && d.status) o.status = d.status;
+        if (coll === 'surety') {
+            if (d.status === 'released') { o.prizeReleased = true; if (!o.status) o.status = 'verified'; }
+            else if (d.status) o.status = d.status;
+        }
+        return o;
+    }
+
+    function fbRebuildShard(k) {
+        const coll = FB_SHARDED[k];
+        const m = Object.assign({}, FB.shardData[coll] || {});
+        if (!fbCanReadAll(coll)) {
+            const b = FB.board || {};
+            if (coll === 'payments') {
+                Object.keys(b).forEach(key => {
+                    if (key.indexOf('pay_') !== 0) return;
+                    const n = key.slice(4);
+                    if (n !== FB.username && !m[n]) m[n] = { status: b[key] };
+                });
+            }
+            if (coll === 'surety') {
+                Object.keys(b).forEach(key => {
+                    if (key.indexOf('sr_') !== 0) return;
+                    const n = key.slice(3);
+                    if (n !== FB.username && !m[n]) m[n] = b[key] === 'released' ? { status: 'verified', prizeReleased: true } : { status: b[key] };
+                });
+            }
+            if (coll === 'profiles' && FB.publicDoc && FB.publicDoc.adminPhone && !m.bhagath) {
+                m.bhagath = { phone: FB.publicDoc.adminPhone };
+            }
+        }
+        FB.last[k] = m;
+        fbApply(k, Object.keys(m).length ? JSON.stringify(m) : null);
+    }
+
+    function fbApply(k, v) {
+        const cur = localStorage.getItem(k);
+        if (cur === v || (cur === null && (v === null || v === undefined))) return;
+        fbRawSet(k, v);
+        fbScheduleRefresh(k);
+    }
+
+    function fbDetach() {
+        FB.unsubs.forEach(u => { try { u(); } catch(e) {} });
+        FB.unsubs = [];
+        (FB.shardUnsubs || []).forEach(u => { try { u(); } catch(e) {} });
+        FB.shardUnsubs = [];
+    }
+
+    function fbAttach() {
+        fbDetach();
+        const F = FB.F, db = FB.db;
+        FB.gotMembers = false;
+        FB.firstSeen = new Set();
+        Object.entries(FB_SHARED).forEach(([k, name]) => {
+            FB.unsubs.push(F.onSnapshot(F.doc(db, 'shared', name), snap => {
+                FB.firstSeen.add(name);
+                const d = snap.exists() ? snap.data() : null;
+                fbApply(k, d && d.json !== undefined && d.json !== null ? d.json : null);
+                if (k === 'chit_coadmins' && fbPermSignature() !== FB.attachedSig) fbAttachShards();
+            }, fbListenError));
+        });
+        FB.unsubs.push(F.onSnapshot(F.doc(db, 'shared', 'board'), snap => {
+            FB.board = snap.exists() ? snap.data() : {};
+            fbRebuildShard('chit_monthly_payments');
+            fbRebuildShard('chit_surety');
+        }, fbListenError));
+        FB.unsubs.push(F.onSnapshot(F.doc(db, 'shared', 'public'), snap => {
+            FB.publicDoc = snap.exists() ? snap.data() : {};
+            fbRebuildShard('chit_member_profiles');
+        }, fbListenError));
+        fbAttachShards();
+        FB.unsubs.push(F.onSnapshot(F.collection(db, 'members'), qs => {
+            const arr = [];
+            qs.forEach(d => {
+                const x = d.data();
+                const un = x.username || d.id;
+                arr.push({ username: un === 'bhagath' ? 'Bhagath' : un, role: x.role || 'member', status: x.status || 'pending',
+                           createdAt: x.createdAt || '', approvedAt: x.approvedAt || '', requestedAt: x.requestedAt || 0 });
+            });
+            arr.sort((a, b) => (a.requestedAt || 0) - (b.requestedAt || 0));
+            FB.last.members = arr;
+            FB.gotMembers = true;
+            fbApply('chit_50k_members', JSON.stringify(arr));
+        }, fbListenError));
+        FB.unsubs.push(F.onSnapshot(F.query(F.collection(db, 'chat'), F.orderBy('ts', 'desc'), F.limit(150)), qs => {
+            const arr = [];
+            qs.forEach(d => { const x = d.data(); arr.push({ user: x.user === 'bhagath' ? 'Bhagath' : x.user, text: x.text, isAdmin: !!x.isAdmin, ts: x.ts, time: x.time }); });
+            arr.reverse();
+            FB.last.chat = arr;
+            fbApply('chit_auction_chat', arr.length ? JSON.stringify(arr) : null);
+        }, fbListenError));
+    }
+
+    // Private collections: staff see everyone, members only their own document.
+    // Re-attached when co-admin permissions change.
+    function fbPermSignature() { return ['payments', 'members', 'auction'].map(p => fbStaff(p) ? 1 : 0).join(''); }
+    function fbAttachShards() {
+        (FB.shardUnsubs || []).forEach(u => { try { u(); } catch(e) {} });
+        FB.shardUnsubs = [];
+        FB.attachedSig = fbPermSignature();
+        const F = FB.F, db = FB.db;
+        Object.entries(FB_SHARDED).forEach(([k, coll]) => {
+            FB.shardData[coll] = {};
+            const onDoc = snap => { FB.shardData[coll] = snap.exists() ? { [FB.username]: fbParseShard(coll, snap.data()) } : {}; fbRebuildShard(k); };
+            const onColl = qs => { const m = {}; qs.forEach(d => { m[d.id] = fbParseShard(coll, d.data()); }); FB.shardData[coll] = m; fbRebuildShard(k); };
+            const unsub = fbCanReadAll(coll)
+                ? F.onSnapshot(F.collection(db, coll), onColl, fbListenError)
+                : F.onSnapshot(F.doc(db, coll, FB.username), onDoc, fbListenError);
+            FB.shardUnsubs.push(unsub);
+        });
+    }
+
+    // Re-render whatever is on screen when remote data arrives (but never while someone is typing)
+    function fbScheduleRefresh(k) {
+        FB.dirty.add(k);
+        if (FB.refreshTimer) return;
+        FB.refreshTimer = setTimeout(fbDoRefresh, 120);
+    }
+    function fbDoRefresh() {
+        FB.refreshTimer = null;
+        const portal = document.getElementById('portalScreen');
+        const keys = [...FB.dirty]; FB.dirty.clear();
+        if (!portal || portal.style.display !== 'block') return;
+        if (keys.includes('chit_auction_chat')) { try { renderAuctionChat(); } catch(e) {} }
+        if (keys.includes('chit_group_announcements')) { try { loadAnnouncements(); } catch(e) {} }
+        if (!keys.some(k => k !== 'chit_auction_chat')) return;
+        if (keys.includes('chit_auction_state')) { try { handleIncomingLiveSync({ type: 'STORAGE_CHANGE' }); } catch(e) {} }
+        const ae = document.activeElement;
+        const typing = ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && ae.closest && (ae.closest('#canvasArea') || ae.closest('#usersDataModal'));
+        if (typing) { FB.deferred = true; return; }
+        const active = document.querySelector('.nav-btn.active');
+        const tab = active ? active.getAttribute('data-tab') : 'home';
+        try { renderCanvasContent(tab, isBhagathUser()); } catch(e) { console.warn(e); }
+        const um = document.getElementById('usersDataModal');
+        if (um && um.style.display === 'grid') {
+            try { renderUsersDataTable(); } catch(e) {}
+            const ap = document.getElementById('adminApprovalsPane');
+            if (ap && ap.style.display === 'block') { try { renderApprovalsPane(); } catch(e) {} }
+            try { updateApprovalBadge(); } catch(e) {}
+        }
+        const ub = document.getElementById('adminUsersDataBtn');
+        if (ub) ub.style.display = isStaffUser() ? 'inline-flex' : 'none';
+    }
+    document.addEventListener('focusout', () => {
+        if (!FB.deferred) return;
+        FB.deferred = false;
+        setTimeout(() => fbScheduleRefresh('deferred'), 60);
+    });
+
+    // ---- sign-in / session ----
+    async function fbAfterSignIn(user, silent) {
+        const F = FB.F, db = FB.db;
+        let username = null;
+        try {
+            const u = await F.getDoc(F.doc(db, 'users', user.uid));
+            username = u.exists() ? u.data().username : null;
+        } catch(e) {}
+        if (!username) {
+            await FB.A.signOut(FB.auth);
+            if (!silent) showAuthMsg('loginMsg', 'This account is not fully set up. Please register again or contact Bhagath.');
+            return false;
+        }
+        let isAdmin = false;
+        try { isAdmin = (await F.getDoc(F.doc(db, 'admins', user.uid))).exists(); } catch(e) {}
+        let status = 'pending';
+        try {
+            const m = await F.getDoc(F.doc(db, 'members', username));
+            if (m.exists()) status = m.data().status || 'pending';
+        } catch(e) {}
+        if (isAdmin && status !== 'approved') {
+            try { await F.setDoc(F.doc(db, 'members', username), { status: 'approved', approvedAt: fbToday() }, { merge: true }); status = 'approved'; } catch(e) {}
+        }
+        if (status !== 'approved') {
+            await FB.A.signOut(FB.auth);
+            if (!silent) {
+                if (status === 'rejected') showAuthMsg('loginMsg', '❌ Your registration was rejected. Please contact Bhagath.');
+                else showAuthMsg('loginMsg', '⏳ Your account is waiting for Bhagath’s approval. You can sign in once it is approved.', 'info');
+            }
+            return false;
+        }
+        FB.user = user; FB.uid = user.uid; FB.username = username; FB.isAdmin = isAdmin;
+        fbClearCache();
+        fbAttach();
+        // wait briefly for the first data so the portal opens filled in
+        const t0 = Date.now();
+        const allIn = () => FB.gotMembers && Object.values(FB_SHARED).every(n => FB.firstSeen.has(n));
+        while (!allIn() && Date.now() - t0 < 5000) await new Promise(r => setTimeout(r, 80));
+        await new Promise(r => setTimeout(r, 150));
+        openPortal(isAdmin ? 'Bhagath' : username);
+        return true;
+    }
+
+    async function fbInit() {
+        fbSetModeUi();
+        try { await fbLoad(); }
+        catch(e) {
+            console.error(e);
+            showAuthMsg('loginMsg', 'Could not reach the server. Check your internet connection and refresh the page.');
+            return false;
+        }
+        FB.on = true;
+        return new Promise(resolve => {
+            let first = true;
+            FB.A.onAuthStateChanged(FB.auth, async (user) => {
+                if (!first) return;
+                first = false;
+                if (!user) return resolve(false);
+                resolve(await fbAfterSignIn(user, true));
+            });
+        });
+    }
+
+    async function fbLogin() {
+        clearAuthMsg('loginMsg');
+        const email = document.getElementById('loginUsername').value.trim();
+        const pw = document.getElementById('loginPassword').value;
+        if (!email || !pw) return showAuthMsg('loginMsg', 'Please enter your email and password.');
+        if (email.indexOf('@') < 0) return showAuthMsg('loginMsg', 'Please sign in with the email you registered with.');
+        if (!FB.on) return showAuthMsg('loginMsg', 'Still connecting to the server. Please wait a moment and try again.');
+        const btn = document.querySelector('#loginForm .login-btn');
+        if (btn) { btn.disabled = true; btn.dataset.t = btn.textContent; btn.textContent = 'Signing in…'; }
+        try {
+            const remember = document.getElementById('rememberMe') ? document.getElementById('rememberMe').checked : true;
+            await FB.A.setPersistence(FB.auth, remember ? FB.A.browserLocalPersistence : FB.A.browserSessionPersistence);
+            const cred = await FB.A.signInWithEmailAndPassword(FB.auth, email, pw);
+            const ok = await fbAfterSignIn(cred.user, false);
+            if (ok) { try { triggerGoogleSavePrompt(email, pw); } catch(_) {} document.getElementById('loginPassword').value = ''; }
+        } catch(e) {
+            document.getElementById('loginPassword').value = '';
+            showAuthMsg('loginMsg', fbAuthErrorText(e));
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = btn.dataset.t || 'Sign In'; }
+        }
+    }
+
+    async function fbRegister() {
+        clearAuthMsg('registerMsg');
+        const g = id => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+        const fullName = g('regFullName'), phone = g('regPhone'), email = g('regEmail');
+        const u = g('regUsername').toLowerCase();
+        const p = document.getElementById('regPassword').value, p2 = document.getElementById('regPassword2').value;
+        if (!fullName || !phone || !email || !u || !p || !p2) return showAuthMsg('registerMsg', 'Please fill in all fields.');
+        const digits = phone.replace(/\D/g, '');
+        if (!(digits.length === 10 || (digits.length === 12 && digits.startsWith('91')))) return showAuthMsg('registerMsg', 'Phone number must be 10 digits.');
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAuthMsg('registerMsg', 'Please enter a valid email address.');
+        if (!/^[a-z0-9_]{3,20}$/.test(u)) return showAuthMsg('registerMsg', 'Username must be 3-20 characters: lowercase letters, numbers, _ only (no spaces).');
+        if ((u.includes('bhagath') && u !== 'bhagath') || u.includes('admin')) return showAuthMsg('registerMsg', 'This username is reserved. Please try another one.');
+        if (p.length < 6) return showAuthMsg('registerMsg', 'Password must be at least 6 characters.');
+        if (p !== p2) return showAuthMsg('registerMsg', 'Passwords do not match.');
+        if (!FB.on) return showAuthMsg('registerMsg', 'Still connecting to the server. Please wait a moment and try again.');
+
+        const btn = document.getElementById('registerSubmitBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
+        const F = FB.F, db = FB.db;
+        let cred = null;
+        try {
+            cred = await FB.A.createUserWithEmailAndPassword(FB.auth, email, p);
+            const all = await F.getDocs(F.collection(db, 'members'));
+            let used = 0;
+            all.forEach(d => { const s = d.data().status; if (s === 'approved' || s === 'pending') used++; });
+            const role = u === 'bhagath' ? 'organizer' : 'member';
+            if (role !== 'organizer' && used >= CHIT_MAX_MEMBERS) throw { code: 'app/full' };
+            await F.setDoc(F.doc(db, 'members', u), {
+                uid: cred.user.uid, username: u, status: 'pending', role,
+                createdAt: fbToday(), requestedAt: Date.now()
+            });
+            await F.setDoc(F.doc(db, 'users', cred.user.uid), { username: u });
+            await F.setDoc(F.doc(db, 'profiles', u), { json: JSON.stringify({ fullName, phone, email }), by: u, at: F.serverTimestamp() });
+            await FB.A.signOut(FB.auth);
+        } catch(e) {
+            if (cred && cred.user && !(e && e.code === 'auth/email-already-in-use')) { try { await cred.user.delete(); } catch(_) {} }
+            try { await FB.A.signOut(FB.auth); } catch(_) {}
+            if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
+            if (e && e.code === 'app/full') return showAuthMsg('registerMsg', 'Sorry, all 20 slots are full.');
+            if (e && e.code === 'permission-denied') return showAuthMsg('registerMsg', 'This username is taken. Please try another one.');
+            return showAuthMsg('registerMsg', fbAuthErrorText(e));
+        }
+        if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
+        ['regFullName', 'regPhone', 'regEmail', 'regUsername', 'regPassword', 'regPassword2'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        switchTab('login');
+        document.getElementById('loginUsername').value = email;
+        showAuthMsg('loginMsg', '✅ Account created! You can sign in once Bhagath approves it.', 'ok');
+    }
+
+    async function fbForgot() {
+        const email = (document.getElementById('forgotUsername').value || '').trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAuthMsg('forgotMsg', 'Please enter the email you registered with.');
+        if (!FB.on) return showAuthMsg('forgotMsg', 'Still connecting to the server. Please try again in a moment.');
+        try {
+            await FB.A.sendPasswordResetEmail(FB.auth, email);
+            showAuthMsg('forgotMsg', '✅ If this email is registered, a password reset link has been sent. Check your inbox (and spam folder).', 'ok');
+        } catch(e) {
+            if (/user-not-found/.test((e && e.code) || '')) return showAuthMsg('forgotMsg', '✅ If this email is registered, a password reset link has been sent. Check your inbox (and spam folder).', 'ok');
+            showAuthMsg('forgotMsg', fbAuthErrorText(e));
+        }
+    }
+
+    async function fbChangePassword() {
+        const cur = document.getElementById('pfCurPass').value;
+        const nw = document.getElementById('pfNewPass').value;
+        const cf = document.getElementById('pfConfPass').value;
+        if (!cur || !nw) { alert('Please enter both the current and new password.'); return; }
+        if (nw.length < 6) { alert('New password must be at least 6 characters.'); return; }
+        if (nw !== cf) { alert('New password and confirmation do not match.'); return; }
+        const user = FB.auth.currentUser;
+        if (!user) { alert('Please sign in again.'); return; }
+        try {
+            await FB.A.reauthenticateWithCredential(user, FB.A.EmailAuthProvider.credential(user.email, cur));
+            await FB.A.updatePassword(user, nw);
+            ['pfCurPass', 'pfNewPass', 'pfConfPass'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            alert('Password changed 🔒 Use the new password from your next login.');
+        } catch(e) {
+            alert(/invalid-credential|wrong-password/.test((e && e.code) || '') ? 'Current password is incorrect.' : fbAuthErrorText(e));
+        }
+    }
+
+    async function fbAdminResetPassword(u) {
+        if (!canDo('members')) return;
+        const pf = getMemberProfile(u) || {};
+        if (!pf.email) { alert(`${u} has no email saved. Ask them to use "Forgot password?" on the sign-in screen.`); return; }
+        if (!confirm(`Send a password reset link to ${pf.email}?`)) return;
+        try {
+            await FB.A.sendPasswordResetEmail(FB.auth, pf.email);
+            alert(`✅ Reset link sent to ${pf.email}. Ask ${u} to check their inbox (and spam folder).`);
+        } catch(e) { alert(fbAuthErrorText(e)); }
+    }
+
+    async function fbLogout() {
+        fbDetach();
+        FB.user = null; FB.uid = null; FB.username = null; FB.isAdmin = false; FB.gotMembers = false;
+        fbClearCache();
+        try { await FB.A.signOut(FB.auth); } catch(e) {}
+    }
+
+    // ---- switch the sign-in screens to email wording ----
+    function fbSetModeUi() {
+        const lu = document.getElementById('loginUsername');
+        if (lu) {
+            lu.type = 'email'; lu.placeholder = 'you@gmail.com'; lu.setAttribute('autocomplete', 'email');
+            const lbl = lu.closest('.form-group') && lu.closest('.form-group').querySelector('label');
+            if (lbl) lbl.textContent = 'Email';
+        }
+        const eg = document.getElementById('regEmailGroup');
+        if (eg) eg.style.display = '';
+        const si = document.getElementById('regSlotsInfo');
+        if (si) si.style.display = 'none';
+        const rp = document.getElementById('regPassword');
+        if (rp) rp.placeholder = 'At least 6 characters';
+        const fu = document.getElementById('forgotUsername');
+        if (fu) {
+            fu.type = 'email'; fu.placeholder = 'you@gmail.com';
+            const lbl = fu.closest('.form-group') && fu.closest('.form-group').querySelector('label');
+            if (lbl) lbl.textContent = 'Your Email';
+        }
+        const ft = document.querySelector('.forgot-text');
+        if (ft) ft.textContent = 'Enter your registered email. We will send you a link to set a new password.';
+        const fb = document.querySelector('.forgot-wa-btn');
+        if (fb) fb.textContent = '📧 Send reset link';
+    }
+
 
     let auctionTimerInterval = null;
     let currentAuctionSubView = 'lobby'; // 'lobby' | 'room'
@@ -7054,6 +7656,7 @@
     }
 
     function changeProfilePassword() {
+        if (FB_MODE) return fbChangePassword();
         const cur = document.getElementById('pfCurPass').value;
         const nw = document.getElementById('pfNewPass').value;
         const cf = document.getElementById('pfConfPass').value;
@@ -7897,6 +8500,7 @@
     // STRICT BHAGATH HOST EXCLUSIVITY & REAL-TIME SYNC ENGINE
     // ==========================================
     function isBhagathUser() {
+        if (FB_MODE) return !!FB.isAdmin;
         const titleEl = document.getElementById('portalWelcomeTitle');
         if (!titleEl) return false;
         const u = titleEl.innerText.replace('Welcome to ', '').trim().toLowerCase();
@@ -9286,6 +9890,7 @@
         const el = document.getElementById('regSlotsInfo');
         const btn = document.getElementById('registerSubmitBtn');
         if (!el) return;
+        if (FB_MODE) { el.style.display = 'none'; if (btn) btn.disabled = false; return; } // checked on the server at sign-up
         const c = getSlotCounts();
         if (c.free <= 0) {
             el.className = 'slots-info is-full';
@@ -9300,6 +9905,7 @@
 
     function handleRegisterSubmit(e) {
         e.preventDefault();
+        if (FB_MODE) return fbRegister();
         clearAuthMsg('registerMsg');
         const fullName = document.getElementById('regFullName').value.trim();
         const phone = document.getElementById('regPhone').value.trim();
@@ -9344,6 +9950,7 @@
 
     function handleLoginSubmit(e) {
         e.preventDefault();
+        if (FB_MODE) return fbLogin();
         clearAuthMsg('loginMsg');
         const u = document.getElementById('loginUsername').value.trim();
         const p = document.getElementById('loginPassword').value;
@@ -9388,6 +9995,7 @@
     }
 
     function restoreSession() {
+        if (FB_MODE) return false; // Firebase keeps its own sign-in (see fbInit)
         let raw = null;
         try { raw = sessionStorage.getItem('chit_session') || localStorage.getItem('chit_session'); } catch(e) {}
         if (!raw) return false;
@@ -9420,6 +10028,7 @@
     }
 
     function sendForgotRequest() {
+        if (FB_MODE) return fbForgot();
         const u = (document.getElementById('forgotUsername').value || '').trim().toLowerCase();
         if (!u) return showAuthMsg('forgotMsg', 'Please enter your username.');
         const exists = getStoredMembers().some(m => (m.username || '').toLowerCase() === u);
@@ -9523,6 +10132,7 @@
     }
 
     function adminResetPassword(u) {
+        if (FB_MODE) return fbAdminResetPassword(u);
         if (!canDo('members')) return;
         if (!confirm(`Reset ${u}’s password? A new temporary password will be created.`)) return;
         const list = getStoredMembers();
@@ -9606,6 +10216,7 @@
     }
 
     function handleLogout() {
+        if (FB_MODE) fbLogout();
         clearSession();
         setTimeout(positionLampGlow, 120);
         passbookViewUser = '';
@@ -10215,6 +10826,16 @@
         const body = document.getElementById('helpDeskBody');
         if (!body) return;
         const c = HELP_CONTENT[currentLang === 'te' ? 'te' : 'en'];
+        if (FB_MODE && !c._fb) {
+            // online mode: password reset is by email link
+            c._fb = true;
+            const fix = currentLang === 'te'
+                ? 'సైన్ ఇన్ పేజీలో <b>పాస్‌వర్డ్ మర్చిపోయారా?</b> నొక్కి, మీరు రిజిస్టర్ చేసిన ఈమెయిల్ ఇవ్వండి. కొత్త పాస్‌వర్డ్ పెట్టుకునే లింక్ మీ ఈమెయిల్‌కి వస్తుంది (స్పామ్ ఫోల్డర్ కూడా చూడండి).'
+                : 'On the sign-in screen tap <b>Forgot password?</b> and enter the email you registered with. You will get a link to set a new password (check the spam folder too).';
+            (c.sections || []).forEach(sec => (sec.items || []).forEach(it => {
+                if (/forgot my password|పాస్‌వర్డ్ మర్చిపోయాను/.test(it[0])) it[1] = fix;
+            }));
+        }
         const q = helpQuery.trim().toLowerCase();
         let shown = 0;
         const sectionsHtml = c.sections.map((sec, si) => {
@@ -10269,6 +10890,18 @@
     // Text-node based: exact labels are swapped, original kept for switching back.
     // =========================================
     const I18N_TE = {
+        'Email': 'ఈమెయిల్', 'Your Email': 'మీ ఈమెయిల్', '(used to sign in & reset password)': '(సైన్ ఇన్ & పాస్‌వర్డ్ రీసెట్ కోసం)',
+        'Enter your registered email. We will send you a link to set a new password.': 'మీరు రిజిస్టర్ చేసిన ఈమెయిల్ ఇవ్వండి. కొత్త పాస్‌వర్డ్ పెట్టుకునే లింక్ పంపుతాం.',
+        '📧 Send reset link': '📧 రీసెట్ లింక్ పంపండి', 'Signing in…': 'సైన్ ఇన్ అవుతోంది…', 'Creating account…': 'అకౌంట్ తయారవుతోంది…',
+        'Incorrect email or password.': 'ఈమెయిల్ లేదా పాస్‌వర్డ్ తప్పు.',
+        'Please enter your email and password.': 'ఈమెయిల్ మరియు పాస్‌వర్డ్ ఇవ్వండి.',
+        'Please sign in with the email you registered with.': 'మీరు రిజిస్టర్ చేసిన ఈమెయిల్‌తో సైన్ ఇన్ చేయండి.',
+        'Please enter a valid email address.': 'సరైన ఈమెయిల్ ఇవ్వండి.',
+        'Password must be at least 6 characters.': 'పాస్‌వర్డ్ కనీసం 6 అక్షరాలు ఉండాలి.',
+        'An account with this email already exists. Please sign in.': 'ఈ ఈమెయిల్‌తో ఇప్పటికే అకౌంట్ ఉంది. సైన్ ఇన్ చేయండి.',
+        'No internet connection. Please try again.': 'ఇంటర్నెట్ లేదు. మళ్ళీ ప్రయత్నించండి.',
+        'Please enter the email you registered with.': 'మీరు రిజిస్టర్ చేసిన ఈమెయిల్ ఇవ్వండి.',
+        '✅ If this email is registered, a password reset link has been sent. Check your inbox (and spam folder).': '✅ ఈ ఈమెయిల్ రిజిస్టర్ అయి ఉంటే, పాస్‌వర్డ్ రీసెట్ లింక్ పంపాం. ఇన్‌బాక్స్ (స్పామ్ ఫోల్డర్ కూడా) చూడండి.',
         'Home': 'హోమ్', 'Auction': 'వేలం', 'Passbook': 'పాస్‌బుక్', 'Winners': 'విజేతలు', 'Profile': 'ప్రొఫైల్',
         'Logout': 'లాగౌట్', '🚪 Logout': '🚪 లాగౌట్', 'Users Data': 'అడ్మిన్ డెస్క్',
         'Sign In': 'సైన్ ఇన్', 'Register': 'రిజిస్టర్', 'Username': 'యూజర్‌నేమ్', 'Password': 'పాస్‌వర్డ్',
@@ -10333,7 +10966,7 @@
     const I18N_TE_PH = {
         'Enter username': 'యూజర్‌నేమ్ ఇవ్వండి', 'Type a message...': 'మెసేజ్ టైప్ చేయండి...', '10-digit mobile': '10 అంకెల మొబైల్',
         'e.g. Kiran Kumar': 'ఉదా. కిరణ్ కుమార్', 'At least 4 characters': 'కనీసం 4 అక్షరాలు', 'Type it again': 'మళ్ళీ టైప్ చేయండి',
-        '12-digit UTR number': '12 అంకెల UTR నంబర్'
+        '12-digit UTR number': '12 అంకెల UTR నంబర్', 'At least 6 characters': 'కనీసం 6 అక్షరాలు'
     };
     let currentLang = 'en';
     try { currentLang = localStorage.getItem('chit_lang') === 'te' ? 'te' : 'en'; } catch(e) {}
@@ -10409,15 +11042,17 @@
         setupSky();
         positionLampGlow();
         setTimeout(positionLampGlow, 400);
-        if (restoreSession()) return;
-        lampAutoTimer = setTimeout(() => {
+        const startLampTimer = () => { lampAutoTimer = setTimeout(() => {
             const authVisible = document.getElementById('authContainer').style.display !== 'none';
             if (!isOn && authVisible) {
                 // gentle auto pull so first-time users are not stuck
                 setCordPosition(34);
                 setTimeout(() => { toggleLamp(); springBackCord(34); }, 120);
             }
-        }, 4000);
+        }, 4000); };
+        if (FB_MODE) { fbInit().then(signedIn => { if (!signedIn) startLampTimer(); }); return; }
+        if (restoreSession()) return;
+        startLampTimer();
     })();
 
     nav.addEventListener("mousemove", e => {

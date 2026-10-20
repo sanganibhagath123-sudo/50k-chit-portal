@@ -4274,6 +4274,12 @@
         .btn-pb-report:hover { background: #ffd700; color: #0b0c10; }
         [data-theme="light"] .btn-pb-report { color: #b8860b; }
 
+        .update-bar { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 100001;
+            align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 8px 10px 8px 14px; border-radius: 999px;
+            background: rgba(17, 24, 39, 0.96); color: #f9fafb; border: 1px solid rgba(250, 204, 21, 0.55);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35); font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+        .update-bar .ub-go { border: 0; border-radius: 999px; padding: 6px 12px; background: #facc15; color: #111827; font-weight: 800; cursor: pointer; font-size: 0.8rem; }
+        .update-bar .ub-x { border: 0; background: transparent; color: #9ca3af; cursor: pointer; font-size: 0.9rem; padding: 4px; }
         .install-chip {
             display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px;
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(139, 92, 246, 0.12));
@@ -5672,6 +5678,13 @@
 
     <!-- Completely Empty Canvas (Kaaliga) Below Navigation Bar -->
     <div class="empty-canvas" id="canvasArea"></div>
+</div>
+
+<!-- New version banner -->
+<div id="updateBar" class="update-bar" style="display: none;">
+    <span>🆕 New version available</span>
+    <button type="button" class="ub-go" onclick="applyAppUpdate()">Update now</button>
+    <button type="button" class="ub-x" onclick="dismissAppUpdate()" aria-label="Close">✕</button>
 </div>
 
 <!-- GSAP for cute lamp cord pull -->
@@ -10624,6 +10637,53 @@
         window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
     }
 
+    // =========================================
+    // AUTO UPDATE: notice a new version on GitHub without reinstalling the app
+    // (compares the server's ETag / Last-Modified of this page with the one at start)
+    // =========================================
+    let appVersionTag = null, appUpdateReady = false, appUpdateLastCheck = 0;
+    async function fetchAppVersionTag() {
+        if (!/^https?:$/.test(location.protocol)) return null;
+        try {
+            const r = await fetch(location.href.split('#')[0], { method: 'HEAD', cache: 'no-store' });
+            if (!r.ok) return null;
+            return r.headers.get('etag') || r.headers.get('last-modified') || null;
+        } catch(e) { return null; }
+    }
+    async function checkForAppUpdate(force) {
+        if (appUpdateReady || !navigator.onLine) return;
+        if (!force && Date.now() - appUpdateLastCheck < 60000) return;
+        appUpdateLastCheck = Date.now();
+        const tag = await fetchAppVersionTag();
+        if (!tag) return;
+        if (!appVersionTag) { appVersionTag = tag; return; }
+        if (tag === appVersionTag) return;
+        appUpdateReady = true;
+        const portalOpen = document.getElementById('portalScreen') && document.getElementById('portalScreen').style.display === 'block';
+        const ae = document.activeElement;
+        const typing = ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && ae.value;
+        if (!portalOpen && !typing) return applyAppUpdate(); // on the sign-in screen: just reload
+        const bar = document.getElementById('updateBar');
+        if (bar) bar.style.display = 'flex';
+    }
+    function applyAppUpdate() {
+        let done = false;
+        const go = () => { if (done) return; done = true; location.reload(); };
+        try {
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+                navigator.serviceWorker.getRegistration().then(r => r ? r.update().catch(() => {}) : null).catch(() => {}).then(go);
+                setTimeout(go, 2500);
+                return;
+            }
+        } catch(e) {}
+        go();
+    }
+    function dismissAppUpdate() { const bar = document.getElementById('updateBar'); if (bar) bar.style.display = 'none'; }
+    window.addEventListener('load', () => { setTimeout(() => checkForAppUpdate(true), 1500); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForAppUpdate(false); });
+    window.addEventListener('online', () => checkForAppUpdate(true));
+    setInterval(() => { if (document.visibilityState === 'visible') checkForAppUpdate(true); }, 10 * 60 * 1000);
+
     function refreshInstallUi() {
         const active = document.querySelector('.nav-btn.active');
         const t = active ? active.getAttribute('data-tab') : '';
@@ -10890,6 +10950,7 @@
     // Text-node based: exact labels are swapped, original kept for switching back.
     // =========================================
     const I18N_TE = {
+        '🆕 New version available': '🆕 కొత్త వెర్షన్ వచ్చింది', 'Update now': 'ఇప్పుడే అప్‌డేట్',
         'Email': 'ఈమెయిల్', 'Your Email': 'మీ ఈమెయిల్', '(used to sign in & reset password)': '(సైన్ ఇన్ & పాస్‌వర్డ్ రీసెట్ కోసం)',
         'Enter your registered email. We will send you a link to set a new password.': 'మీరు రిజిస్టర్ చేసిన ఈమెయిల్ ఇవ్వండి. కొత్త పాస్‌వర్డ్ పెట్టుకునే లింక్ పంపుతాం.',
         '📧 Send reset link': '📧 రీసెట్ లింక్ పంపండి', 'Signing in…': 'సైన్ ఇన్ అవుతోంది…', 'Creating account…': 'అకౌంట్ తయారవుతోంది…',

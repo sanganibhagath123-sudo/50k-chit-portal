@@ -7297,7 +7297,7 @@
 
     function getUserDueAmount(username) {
         const st = getAuctionState();
-        const div = (st.dividend !== undefined) ? st.dividend : 350;
+        const div = (st.dividend !== undefined) ? st.dividend : 0; // no auction result yet → no dividend
         let due = CHIT_BASE_SHARE - div;
         const u = (username || '').toLowerCase();
         if (u.includes('admin') || u.includes('bhagath')) due = Math.max(0, due - 1500);
@@ -9623,7 +9623,8 @@
             const status = memberRecord.status; // 'pending' | 'submitted' | 'verified'
 
             const auctionSt = getAuctionState();
-            const currentDividendVal = (auctionSt.dividend !== undefined) ? auctionSt.dividend : 350;
+            const auctionDone = auctionSt.dividend !== undefined;
+            const currentDividendVal = auctionDone ? auctionSt.dividend : 0; // no auction result yet → no dividend
             let displayDueAmount = 2500 - currentDividendVal;
             if (isUserAdmin) {
                 displayDueAmount = Math.max(0, displayDueAmount - 1500); // Admin gets 1,500 discount!
@@ -9803,7 +9804,7 @@
                             </div>
                             <div class="breakdown-line">
                                 <span>Dividend Discount (20 Members):</span>
-                                <span class="breakdown-val-discount">- ₹${currentDividendVal.toLocaleString('en-IN')}</span>
+                                <span class="breakdown-val-discount">${auctionDone ? `- ₹${currentDividendVal.toLocaleString('en-IN')}` : '<span style="color:#94a3b8;font-weight:600;">After auction</span>'}</span>
                             </div>
                             ${isUserAdmin ? `
                             <div class="breakdown-line" style="color: #ffd700 !important;">

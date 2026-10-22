@@ -5243,6 +5243,84 @@
             .nav-btn span, .nav-btn.active span { font-size: 9.5px !important; }
             .pool-metric-card .metric-value-lg, .trio-val { font-size: 14px !important; }
         }
+
+        /* =========================================
+           PHONE POLISH v2 (phones only; PC layout unchanged)
+           ========================================= */
+        @media (max-width: 640px) {
+            /* header: Logout lives in Profile, so the name gets room */
+            .portal-logout-btn { display: none !important; }
+            .portal-welcome-text { font-size: 14px !important; }
+
+            /* tighter page rhythm */
+            .home-wrapper-compact, .home-dashboard-grid { gap: 12px !important; }
+            .due-card-compact, .auction-card-compact, .members-pool-desk,
+            .single-month-card, .single-cycle-progress-card, .pf-card {
+                padding: 14px 12px !important; border-radius: 18px !important;
+            }
+            .due-icon-box, .pool-icon-box { width: 38px !important; height: 38px !important; min-width: 38px !important; font-size: 19px !important; border-radius: 11px !important; }
+            .due-heading, .pool-main-heading { font-size: 16px !important; line-height: 1.25 !important; }
+            .due-subtext { font-size: 12px !important; }
+            .due-card-header { padding-bottom: 10px !important; }
+
+            /* festival banner: slimmer strip */
+            .festival-banner-strip { min-height: 0 !important; padding: 12px 14px !important; border-radius: 16px !important; }
+            .banner-emblem-box, .banner-luxury-tag { display: none !important; }
+            .banner-title-text { font-size: 15px !important; margin: 0 0 2px !important; }
+            .banner-subtitle-text { font-size: 12px !important; line-height: 1.35 !important; }
+
+            /* installment card */
+            .due-hero-container { padding: 0 !important; }
+            .due-value { font-size: 36px !important; }
+            .due-breakdown-panel { padding: 10px 12px !important; gap: 5px !important; font-size: 12.5px !important; }
+            .due-breakdown-panel .breakdown-line { font-size: 12.5px !important; }
+            .payment-btns-cluster { gap: 8px !important; }
+            .btn-pay-phonepe-branded { padding: 11px 14px !important; }
+            .btn-mark-paid-action { padding: 10px !important; }
+
+            /* countdown boxes */
+            .auction-countdown-grid, .lob-cd-grid { gap: 6px !important; }
+            .auction-countdown-grid > *, .lob-cd-grid > * { padding: 8px 2px !important; border-radius: 12px !important; }
+
+            /* members directory: compact rows, shorter list */
+            .pool-desk-header { padding-bottom: 10px !important; }
+            .pool-metrics-row { gap: 6px !important; }
+            .pool-metric-card { padding: 8px 8px !important; border-radius: 12px !important; }
+            .members-grid-scroll { gap: 6px !important; max-height: 250px !important; }
+            .member-status-chip { padding: 8px 10px !important; border-radius: 11px !important; box-shadow: none !important; }
+
+            /* auction tab: smaller stat boxes + 20-month timeline */
+            .single-card-stats-grid { gap: 8px !important; }
+            .single-stat-box { padding: 8px 10px !important; border-radius: 12px !important; }
+            .single-stat-val { font-size: 15px !important; }
+            .mo-timeline-grid { gap: 5px !important; }
+            .mo-tile { min-height: 38px !important; padding: 4px 2px !important; border-radius: 9px !important; }
+            .mo-tile-num { font-size: 12px !important; }
+            .mo-tile-name { font-size: 9.5px !important; }
+            .mo-rules-grid { gap: 6px !important; }
+            .mo-rule { padding: 7px 9px !important; border-radius: 11px !important; }
+            .btn-single-month-action { padding: 13px 18px !important; font-size: 15px !important; }
+
+            /* passbook: show the next 2 upcoming months, fold the rest */
+            .passbook-table tr.is-future ~ tr.is-future ~ tr.is-future { display: none; }
+            .passbook-table.pb-show-all tr.is-future { display: table-row !important; }
+            .passbook-table td, .passbook-table th { padding-top: 9px !important; padding-bottom: 9px !important; }
+
+            /* lamp hint sits next to the cord, not on the stand */
+            .lamp-hint { left: 50% !important; top: auto !important; bottom: -38px !important; }
+
+            /* feels like an app: press feedback, no rubber-band page */
+            button, .nav-btn, .member-status-chip, .mo-tile { transition: transform .12s ease; }
+            button:active, .nav-btn:active, .mo-tile:active { transform: scale(0.97); }
+            html, body { overscroll-behavior-y: none; }
+        }
+        .pb-more-row { display: none; }
+        @media (max-width: 640px) {
+            .pb-more-row { display: table-row; }
+            .passbook-table.pb-show-all .pb-more-row { display: none; }
+            .pb-more-row td { text-align: center !important; padding: 10px !important; }
+            .pb-more-btn { background: none; border: 1px dashed rgba(255,215,0,.35); color: #ffd700; font: inherit; font-size: 12.5px; font-weight: 700; padding: 8px 14px; border-radius: 10px; cursor: pointer; }
+        }
     </style>
 </head>
 <body data-on="false">
@@ -7409,6 +7487,10 @@
                     <td>${receiptHtml}</td>
                 </tr>`;
         });
+        const futureCount = rows.filter(r => r.kind === 'future').length;
+        if (futureCount > 2) {
+            rowsHtml += `<tr class="pb-more-row"><td colspan="7"><button type="button" class="pb-more-btn" onclick="this.closest('table').classList.add('pb-show-all')">+ ${futureCount - 2} more upcoming months</button></td></tr>`;
+        }
 
         return `
             <div class="passbook-wrapper">
@@ -8731,15 +8813,48 @@
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            tempUploadedBannerImg = e.target.result;
+            compressBannerImage(e.target.result, function(small) {
+            if (!small) { alert('This photo could not be opened. Please try another JPG or PNG.'); return; }
+            tempUploadedBannerImg = small;
             const previewContainer = document.getElementById('adminBannerPreviewContainer');
             const previewImg = document.getElementById('adminBannerPreviewImg');
             if (previewContainer && previewImg) {
                 previewImg.src = tempUploadedBannerImg;
                 previewContainer.style.display = 'flex';
             }
+            });
         };
         reader.readAsDataURL(file);
+    }
+
+    // Phone photos are 3-5 MB, but one Firebase document can hold only 1 MB.
+    // Shrink the banner to max 1280px wide and keep it under ~600 KB so it always saves and loads fast.
+    function compressBannerImage(dataUrl, callback) {
+        const img = new Image();
+        img.onload = function() {
+            let w = img.naturalWidth, h = img.naturalHeight;
+            const maxW = 1280, maxH = 720;
+            const ratio = Math.min(1, maxW / w, maxH / h);
+            w = Math.max(1, Math.round(w * ratio)); h = Math.max(1, Math.round(h * ratio));
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#111111'; ctx.fillRect(0, 0, w, h);
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, w, h);
+            const LIMIT = 600000; // characters of base64 (~450 KB image)
+            let q = 0.82, out = canvas.toDataURL('image/jpeg', q);
+            while (out.length > LIMIT && q > 0.4) { q -= 0.08; out = canvas.toDataURL('image/jpeg', q); }
+            if (out.length > LIMIT) {
+                const c2 = document.createElement('canvas');
+                c2.width = Math.round(w * 0.7); c2.height = Math.round(h * 0.7);
+                c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height);
+                out = c2.toDataURL('image/jpeg', 0.7);
+            }
+            callback(out);
+        };
+        img.onerror = function() { callback(null); };
+        img.src = dataUrl;
     }
 
     function removeUploadedBannerImage() {

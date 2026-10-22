@@ -5319,6 +5319,82 @@
             .pb-more-row td { text-align: center !important; padding: 10px !important; }
             .pb-more-btn { background: none; border: 1px dashed rgba(255,215,0,.35); color: #ffd700; font: inherit; font-size: 12.5px; font-weight: 700; padding: 8px 14px; border-radius: 10px; cursor: pointer; }
         }
+
+        /* =========================================
+           BANNER LIGHTING: golden shine sweep + soft bulb twinkle
+           Admin Desk → Monthly Banner → "Shine Animation" turns it on/off
+           ========================================= */
+        .banner-shine {
+            position: absolute; inset: 0; overflow: hidden;
+            pointer-events: none; z-index: 2;
+        }
+        .banner-shine::after {
+            content: '';
+            position: absolute;
+            top: -30%; bottom: -30%; left: 0;
+            width: 34%;
+            background: linear-gradient(105deg,
+                rgba(255, 236, 170, 0) 0%,
+                rgba(255, 236, 170, 0) 30%,
+                rgba(255, 230, 150, 0.22) 45%,
+                rgba(255, 252, 230, 0.42) 50%,
+                rgba(255, 230, 150, 0.22) 55%,
+                rgba(255, 236, 170, 0) 70%);
+            transform: translateX(-130%) skewX(-14deg);
+            animation: bannerShineSweep 7s ease-in-out infinite;
+            animation-delay: 1.2s;
+            mix-blend-mode: screen;
+            will-change: transform;
+        }
+        @keyframes bannerShineSweep {
+            0%   { transform: translateX(-130%) skewX(-14deg); }
+            20%  { transform: translateX(330%) skewX(-14deg); }
+            100% { transform: translateX(330%) skewX(-14deg); }
+        }
+        .festival-banner-strip.is-animated .banner-fairy-canopy-svg circle {
+            animation: bannerBulbTwinkle 3.6s ease-in-out infinite;
+        }
+        .festival-banner-strip.is-animated .banner-fairy-canopy-svg circle:nth-of-type(2n) { animation-duration: 4.2s; animation-delay: -1.3s; }
+        .festival-banner-strip.is-animated .banner-fairy-canopy-svg circle:nth-of-type(3n) { animation-duration: 3.1s; animation-delay: -2.2s; }
+        .festival-banner-strip.is-animated .banner-fairy-canopy-svg circle:nth-of-type(5n) { animation-duration: 4.8s; animation-delay: -0.6s; }
+        @keyframes bannerBulbTwinkle {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.5; }
+        }
+        .festival-banner-strip.is-offscreen *,
+        .festival-banner-strip.is-offscreen *::after { animation-play-state: paused !important; }
+        @media (prefers-reduced-motion: reduce) {
+            .banner-shine { display: none; }
+            .festival-banner-strip .banner-fairy-canopy-svg circle { animation: none !important; }
+        }
+
+        /* Home: installment card before the auction */
+        .due-wait-box {
+            display: flex; gap: 12px; align-items: center;
+            padding: 14px; border-radius: 14px;
+            background: rgba(255, 215, 0, 0.07);
+            border: 1px dashed rgba(255, 215, 0, 0.35);
+        }
+        .due-wait-ico { font-size: 26px; line-height: 1; }
+        .due-wait-title { display: block; font-size: 15px; font-weight: 800; color: #ffd700; }
+        .due-wait-sub { display: block; font-size: 12.5px; color: #cbd5e1; margin-top: 3px; line-height: 1.45; }
+        .status-pill-wait { background: rgba(255, 215, 0, 0.12) !important; color: #ffd700 !important; border: 1px solid rgba(255, 215, 0, 0.45) !important; }
+        [data-theme="light"] .due-wait-box { background: #fffbeb; border-color: #f59e0b; }
+        [data-theme="light"] .due-wait-title { color: #b45309; }
+        [data-theme="light"] .due-wait-sub { color: #475569; }
+
+        /* WhatsApp share (Bhagath / auction co-admin) */
+        .wa-share-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 12px 0 4px; }
+        .wa-share-btn, .wa-copy-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+            border-radius: 12px; padding: 11px 14px; font: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer;
+        }
+        .wa-share-btn { background: #25d366; color: #06301a; border: 1px solid #1ebe5a; box-shadow: 0 6px 18px rgba(37, 211, 102, 0.25); }
+        .wa-share-btn i { font-size: 18px; }
+        .wa-copy-btn { background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.18); }
+        .wa-share-hint { font-size: 11px; color: #94a3b8; margin-bottom: 10px; }
+        [data-theme="light"] .wa-copy-btn { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+        [data-theme="light"] .wa-share-hint { color: #64748b; }
     </style>
 </head>
 <body data-on="false">
@@ -5464,6 +5540,10 @@
                             <label style="display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 13px; font-weight: 600; color: #ffeb99;">
                                 <input type="checkbox" id="adminBannerLightsCheck" style="accent-color: #ffd700; width: 16px; height: 16px;" onchange="toggleBannerLights(this.checked)" />
                                 <span>Show Fairy Lights</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 13px; font-weight: 600; color: #ffeb99;">
+                                <input type="checkbox" id="adminBannerAnimCheck" style="accent-color: #ffd700; width: 16px; height: 16px;" onchange="toggleBannerAnimation(this.checked)" />
+                                <span>✨ Shine Animation</span>
                             </label>
                         </div>
                     </div>
@@ -7470,6 +7550,9 @@
                     receiptHtml = `<button class="btn-pb-receipt" onclick="printPassbookReceipt('${pbJsq(viewUser)}', ${r.month})">🧾<span class="pb-rc-txt"> Receipt</span></button>`;
                 } else if (r.kind === 'review') {
                     statusHtml = `<span class="member-chip-pill chip-review">Review 🟡</span>`;
+                } else if (r.isCurrent && isWaitingForAuction()) {
+                    statusHtml = `<span class="member-chip-pill chip-upcoming">After auction</span>`;
+                    netHtml = '—'; divHtml = '—';
                 } else {
                     statusHtml = `<span class="member-chip-pill chip-unpaid">${r.isCurrent ? 'Due 🔴' : 'Unpaid 🔴'}</span>`;
                 }
@@ -8660,7 +8743,7 @@
             const record = ledger[cleanKey] || { status: 'pending' };
 
             let pillClass = 'chip-pending';
-            let pillText = 'Unpaid 🔴';
+            let pillText = isWaitingForAuction() ? 'Waiting ⏳' : 'Unpaid 🔴';
 
             if (record.status === 'verified') {
                 paidCount++;
@@ -8754,7 +8837,7 @@
                 <div>
                     <div style="font-size: 12px; color: #94a3b8; font-weight: 600; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
                         <span>MEMBERS DIRECTORY (${members.length} MEMBERS)</span>
-                        <span style="font-size: 11px; color: #ffd700;">₹${regularDue.toLocaleString('en-IN')} / member</span>
+                        <span style="font-size: 11px; color: #ffd700;">${isWaitingForAuction() ? 'Amount after auction' : `₹${regularDue.toLocaleString('en-IN')} / member`}</span>
                     </div>
                     <div class="members-grid-scroll">
                         ${chipsHtml}
@@ -8798,6 +8881,15 @@
         renderCanvasContent('home', isBhagathUser());
         const lightsCheck = document.getElementById('adminBannerLightsCheck');
         if (lightsCheck) lightsCheck.checked = shouldShow;
+    }
+
+    function toggleBannerAnimation(shouldAnimate) {
+        const current = getMonthlyBannerData();
+        current.animate = shouldAnimate;
+        localStorage.setItem('chit_monthly_banner', JSON.stringify(current));
+        renderCanvasContent('home', isBhagathUser());
+        const animCheck = document.getElementById('adminBannerAnimCheck');
+        if (animCheck) animCheck.checked = shouldAnimate;
     }
 
     function handleBannerFileUpload(event) {
@@ -8873,9 +8965,11 @@
         const finalImg = tempUploadedBannerImg || current.imgData || defaultBannerBackdrop;
 
         const showLightsVal = document.getElementById('adminBannerLightsCheck') ? document.getElementById('adminBannerLightsCheck').checked : true;
+        const animateVal = document.getElementById('adminBannerAnimCheck') ? document.getElementById('adminBannerAnimCheck').checked : true;
         const data = {
             enabled: isEnabled,
             showLights: showLightsVal,
+            animate: animateVal,
             title: titleVal,
             subtitle: subtitleVal,
             imgData: finalImg,
@@ -9110,6 +9204,8 @@
         if (toggleEl) toggleEl.checked = (banner.enabled !== false);
         const lightsCheck = document.getElementById('adminBannerLightsCheck');
         if (lightsCheck) lightsCheck.checked = (banner.showLights !== false);
+        const animCheck = document.getElementById('adminBannerAnimCheck');
+        if (animCheck) animCheck.checked = (banner.animate !== false);
 
         tempUploadedBannerImg = banner.imgData || "";
         if (tempUploadedBannerImg && previewContainer && previewImg) {
@@ -9719,7 +9815,118 @@
     // =========================================
     // RENDER STEP 1: COMPACT DUE CARD + NEXT CARD SLOT (100% CLEAN HOME)
     // =========================================
+
+    // ==========================================
+    // AUCTION RESULT HELPERS (waiting state, final month, WhatsApp share)
+    // ==========================================
+    // True while this month's amount is not known yet (no auction result).
+    // The last month (Month 20) has no auction, so payments open at ₹2,500 from day 1.
+    function isWaitingForAuction() {
+        const st = getAuctionState();
+        if (st.dividend !== undefined) return false;
+        if (getCurrentChitMonth() >= CHIT_TOTAL_MONTHS) return false;
+        return true;
+    }
+
+    // Month 20: only one member has not won yet → they get the full pool, no auction, dividend ₹0.
+    // Runs on Bhagath's / an auction co-admin's screen only, once.
+    let _finalMonthBusy = false;
+    function autoFinalizeLastMonth() {
+        if (_finalMonthBusy) return;
+        if (getCurrentChitMonth() < CHIT_TOTAL_MONTHS) return;
+        if (!canDo('auction')) return;
+        const st = getAuctionState();
+        if (st.winner || st.started) return;
+        const hist = getAuctionHistory();
+        if (hist.some(h => Number(h.month) === CHIT_TOTAL_MONTHS)) return;
+        const remaining = getGroupMembersList().map(m => m.username).filter(u => u && !isPriorWinner(u));
+        if (remaining.length !== 1) return;
+        _finalMonthBusy = true;
+        try {
+            const w = remaining[0];
+            const pot = st.basePot || 48500;
+            st.started = false; st.winner = w; st.currentBid = 0; st.leadBidder = w;
+            st.dividend = 0; st.winnerPrize = pot; st.wonAt = Date.now(); st.wonMonth = CHIT_TOTAL_MONTHS;
+            st.regularDue = CHIT_BASE_SHARE; st.adminDue = Math.max(0, CHIT_BASE_SHARE - 1500); st.finalMonth = true;
+            st.feed = [{ text: `🏁 Final month: no auction. ${w} receives ₹${pot.toLocaleString('en-IN')}. Everyone pays ₹${CHIT_BASE_SHARE.toLocaleString('en-IN')}.`,
+                         time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }), type: 'system' }].concat(st.feed || []);
+            saveAuctionState(st);
+            saveAuctionHistoryEntry({
+                month: CHIT_TOTAL_MONTHS, winner: w, bid: 0, takeHome: pot, dividend: 0,
+                date: new Date().toLocaleDateString('en-IN'), participants: [w], quitMembers: [], bids: [], finalMonth: true
+            });
+        } finally { _finalMonthBusy = false; }
+        setTimeout(() => {
+            const active = document.querySelector('.nav-btn.active');
+            try { renderCanvasContent(active ? active.getAttribute('data-tab') : 'home', isBhagathUser()); } catch(e) {}
+        }, 50);
+    }
+
+    function buildAuctionShareText() {
+        const st = getAuctionState();
+        if (st.dividend === undefined || !st.winner) return null;
+        const month = Number(st.wonMonth) || getCurrentChitMonth();
+        const div = Number(st.dividend) || 0;
+        const due = CHIT_BASE_SHARE - div;
+        const won = new Date(st.wonAt || Date.now());
+        let dueDate = new Date(won.getFullYear(), won.getMonth(), 10);
+        if (st.finalMonth || month >= CHIT_TOTAL_MONTHS) {
+            // final month opens right after Month 19 → due on the next 10th
+            if (won.getDate() > 5) dueDate = new Date(won.getFullYear(), won.getMonth() + 1, 10);
+        } else if (won.getDate() >= 10) {
+            dueDate = new Date(won.getTime() + 5 * 864e5); // auction was postponed past the 10th
+        }
+        const dueTxt = dueDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const take = Number(st.winnerPrize) || Math.max(0, (st.basePot || 48500) - (Number(st.currentBid) || 0));
+        const rs = n => '₹' + Number(n).toLocaleString('en-IN');
+        const link = location.protocol.startsWith('http') ? (location.origin + location.pathname.replace(/index\.html$/, '')) : '';
+        const lines = [];
+        if (st.finalMonth || month >= CHIT_TOTAL_MONTHS) {
+            lines.push(`🏁 *50K Chit – Month ${pbPad(month)} (Final Month)*`, '');
+            lines.push(`No auction this month.`);
+            lines.push(`👤 *${st.winner}* receives ${rs(take)}`);
+        } else {
+            lines.push(`🏆 *50K Chit – Month ${pbPad(month)} Auction Result*`, '');
+            lines.push(`👤 Winner: *${st.winner}*`);
+            lines.push(`🔨 Winning bid: ${rs(st.currentBid || 0)}`);
+            lines.push(`💵 Winner take-home: ${rs(take)}`);
+            lines.push(`🎁 Dividend: ${rs(div)} per member`);
+        }
+        lines.push('');
+        lines.push(`💰 *This month installment: ${rs(due)}*`);
+        lines.push(`📅 *Pay before ${dueTxt}*`);
+        lines.push(`📲 UPI: ${getPayUpiId()}`);
+        lines.push('');
+        lines.push(`ఈ నెల కట్టాల్సింది: *${rs(due)}* — ${dueTxt} లోపు కట్టండి 🙏`);
+        lines.push(`Pay chesaka app lo "I Have Paid" nokkandi.`);
+        if (link) lines.push(`👉 ${link}`);
+        return lines.join('\n');
+    }
+    function shareAuctionResultWhatsApp() {
+        const t = buildAuctionShareText();
+        if (!t) { alert('The auction result is not ready yet.'); return; }
+        window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
+    }
+    function copyAuctionResultText() {
+        const t = buildAuctionShareText();
+        if (!t) { alert('The auction result is not ready yet.'); return; }
+        const done = () => { try { fbToast('✅ Message copied. Paste it in the WhatsApp group.'); } catch(e) { alert('Message copied. Paste it in the WhatsApp group.'); } };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => { prompt('Copy this message:', t); });
+        else prompt('Copy this message:', t);
+    }
+    function auctionShareButtonsHtml() {
+        if (!canDo('auction')) return '';
+        const st = getAuctionState();
+        if (st.dividend === undefined || !st.winner) return '';
+        return `<div class="wa-share-row">
+                    <button type="button" class="wa-share-btn" onclick="shareAuctionResultWhatsApp()"><i class='bx bxl-whatsapp'></i> Share result on WhatsApp</button>
+                    <button type="button" class="wa-copy-btn" onclick="copyAuctionResultText()"><i class='bx bx-copy'></i> Copy</button>
+                </div>
+                <div class="wa-share-hint">Only you (and auction co-admins) see this. Members see their amount on Home after the result.</div>`;
+    }
+
     function renderCanvasContent(tabName, isUserAdmin) {
+        if (getCurrentChitMonth() >= CHIT_TOTAL_MONTHS) setTimeout(() => { try { autoFinalizeLastMonth(); } catch(e) { console.warn(e); } }, 0);
         const canvas = document.getElementById('canvasArea');
         if (!canvas) return;
         const prevCanvasView = canvasViewKey;
@@ -9736,8 +9943,15 @@
             const status = memberRecord.status; // 'pending' | 'submitted' | 'verified'
 
             const auctionSt = getAuctionState();
-            const auctionDone = auctionSt.dividend !== undefined;
-            const currentDividendVal = auctionDone ? auctionSt.dividend : 0; // no auction result yet → no dividend
+            const auctionDone = !isWaitingForAuction();
+            const currentDividendVal = (auctionSt.dividend !== undefined) ? Number(auctionSt.dividend) || 0 : 0; // no auction result yet → no dividend
+            // Before this month's auction result the amount is not known yet → no amount, no pay buttons
+            const waitingForAuction = !auctionDone && status !== 'verified' && status !== 'submitted';
+            let nextAuctionText = '5th @ 8:00 PM';
+            try {
+                const nd = getNextAuctionDate();
+                if (nd && !isNaN(nd.getTime())) nextAuctionText = nd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ' • ' + nd.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+            } catch(e) {}
             let displayDueAmount = 2500 - currentDividendVal;
             if (isUserAdmin) {
                 displayDueAmount = Math.max(0, displayDueAmount - 1500); // Admin gets 1,500 discount!
@@ -9809,6 +10023,11 @@
                 `;
             }
 
+            if (waitingForAuction) {
+                statusPillHtml = `<span class="due-header-status-pill status-pill-wait"><i class='bx bx-time-five'></i> WAITING</span>`;
+                actionAreaHtml = '';
+            }
+
             // Check Monthly Banner (Realistic Myntra-style Warm Festive Lighting)
             const bannerData = getMonthlyBannerData();
             let bannerHtml = '';
@@ -9825,9 +10044,10 @@
                 const cleanBadge = (bannerData.badge || '').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim();
 
                 bannerHtml = `
-                    <div class="festival-banner-strip">
+                    <div class="festival-banner-strip ${bannerData.animate !== false ? 'is-animated' : ''}">
                         <img class="banner-main-img" src="${bannerImgSrc}" onerror="this.style.display='none'" alt="Festival Banner" />
                         <div class="banner-glass-sheen"></div>
+                        ${bannerData.animate !== false ? '<div class="banner-shine"></div>' : ''}
                         ${hasAnyText ? `<div class="banner-scrim-overlay"></div>` : ''}
 
                         ${(bannerData.showLights !== false) ? `
@@ -9899,6 +10119,15 @@
                             <div>${statusPillHtml}</div>
                         </div>
 
+                        ${waitingForAuction ? `
+                        <div class="due-wait-box">
+                            <span class="due-wait-ico">${auctionSt.started ? '🔴' : '⏳'}</span>
+                            <div>
+                                <span class="due-wait-title">${auctionSt.started ? 'Auction is live now' : 'Amount will show after the auction'}</span>
+                                <span class="due-wait-sub">${auctionSt.started ? 'Your exact amount and pay options appear here as soon as the winner is declared.' : `Month ${pbPad(getCurrentChitMonth())} auction: <b>${nextAuctionText}</b>. After the result, your amount (₹2,500 − dividend${isUserAdmin ? ' − ₹1,500' : ''}) and pay options appear here. Pay by the 10th.`}</span>
+                            </div>
+                        </div>
+                        ` : `
                         <!-- Cramp-Free Dedicated Amount & Status Hero -->
                         <div class="due-hero-container">
                             <div class="due-amount-display-line">
@@ -9936,6 +10165,7 @@
                                 <span style="color: #ffd700; font-weight: 700;">10th of this month</span>
                             </div>
                         </div>
+                        `}
 
                         ${actionAreaHtml}
                     </div>
@@ -10119,8 +10349,8 @@
                                     <span class="single-stat-val" style="color: #ffd700;">₹48,500</span>
                                 </div>
                                 <div class="single-stat-box">
-                                    <span class="single-stat-label">Next Auction</span>
-                                    <span class="single-stat-val" style="font-size: 16px;">${hasWinner ? 'Month ' + pbPad(Math.min(curM + 1, CHIT_TOTAL_MONTHS)) : nextAucText}</span>
+                                    <span class="single-stat-label">${curM >= CHIT_TOTAL_MONTHS ? 'Chit Status' : 'Next Auction'}</span>
+                                    <span class="single-stat-val" style="font-size: 16px;">${curM >= CHIT_TOTAL_MONTHS ? (hasWinner ? 'Completed 🎉' : 'Final month') : (hasWinner ? 'Month ' + pbPad(Math.min(curM + 1, CHIT_TOTAL_MONTHS)) : nextAucText)}</span>
                                 </div>
                                 <div class="single-stat-box">
                                     <span class="single-stat-label">Registered Members</span>
@@ -10151,7 +10381,10 @@
                                 ${prevWinners.map(w => `<span class="mo-winner-chip ${(w || '').toLowerCase() === activeUser.toLowerCase() ? 'is-me' : ''}">🏆 ${pbEsc(w)}</span>`).join('')}
                             </div>` : ''}
 
-                            ${!isStarted ? `
+                            ${curM >= CHIT_TOTAL_MONTHS ? `
+                            <div class="mo-note-won">🏁 Final month: no auction. ${st.winner ? `<b>${pbEsc(st.winner)}</b> receives ₹${(st.winnerPrize || 48500).toLocaleString('en-IN')}.` : 'The last member receives the full pool.'} Everyone pays ₹${CHIT_BASE_SHARE.toLocaleString('en-IN')} this month.</div>` : ''}
+                            ${hasWinner ? `<div style="margin-bottom:12px;">${auctionShareButtonsHtml()}</div>` : ''}
+                            ${(!isStarted && curM < CHIT_TOTAL_MONTHS) ? `
                             <div class="lob-cd" id="lobCountdown" data-target="${nextAuc.getTime()}" data-settled="${hasWinner ? 1 : 0}">
                                 <div class="lob-cd-label" id="lobCdLabel">${hasWinner ? `Month ${pbPad(Math.min(curM + 1, CHIT_TOTAL_MONTHS))} auction in` : 'Auction starts in'}</div>
                                 <div class="lob-cd-grid" id="lobCdGrid">
@@ -10289,6 +10522,7 @@
                                     <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 14px; padding: 14px; max-width: 560px; margin: 0 auto; color: #f1f5f9; font-size: 14px;">
                                         ✨ Take-Home Cash: <b style="color: #4ade80;">₹${(st.winnerPrize || takeHomePrize).toLocaleString('en-IN')}</b> | Dividend (20 Members): <b style="color: #38bdf8;">₹${st.dividend.toLocaleString('en-IN')} / member</b>
                                     </div>
+                                    <div style="max-width: 560px; margin: 12px auto 0;">${auctionShareButtonsHtml()}</div>
                                 </div>
                             ` : `
                                 <span style="font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Current Leading Bid Discount</span>
@@ -11739,7 +11973,7 @@
         'Scan QR & Pay': 'QR స్కాన్ చేసి చెల్లించండి', 'Open QR': 'QR చూడండి', 'Amount to Pay': 'చెల్లించాల్సిన మొత్తం',
         'Days': 'రోజులు', 'Hours': 'గంటలు', 'Mins': 'నిమి', 'Secs': 'సెక',
         'Group Collection Progress': 'గ్రూప్ వసూలు ప్రగతి', 'Current Month Collected': 'ఈ నెల వసూలు', 'Monthly Pool Target': 'నెలవారీ లక్ష్యం',
-        'Vacant': 'ఖాళీ', 'Slot Available': 'స్లాట్ ఖాళీ', 'Paid 🟢': 'చెల్లించారు 🟢', 'Pending 🔴': 'బాకీ 🔴', 'Unpaid 🔴': 'బాకీ 🔴', 'Review 🟡': 'పరిశీలన 🟡',
+        'Vacant': 'ఖాళీ', 'Slot Available': 'స్లాట్ ఖాళీ', 'Paid 🟢': 'చెల్లించారు 🟢', 'Pending 🔴': 'బాకీ 🔴', 'Unpaid 🔴': 'బాకీ 🔴', 'Waiting ⏳': 'వేచి ఉంది ⏳', 'Share result on WhatsApp': 'WhatsApp లో షేర్ చేయండి', 'Copy': 'కాపీ', 'After auction': 'వేలం తర్వాత', 'WAITING': 'వేచి ఉంది', '✨ Shine Animation': '✨ మెరుపు యానిమేషన్', 'Review 🟡': 'పరిశీలన 🟡',
         '✅ Paid': '✅ చెల్లించారు', '🟡 Review': '🟡 పరిశీలన',
         'Chit Value (Gross)': 'చిట్ విలువ', 'Net Pool (Prize)': 'నికర బహుమతి', 'Next Auction': 'తదుపరి వేలం', 'Registered Members': 'నమోదైన సభ్యులు',
         '20-MONTH TIMELINE': '20 నెలల టైమ్‌లైన్', 'Completed': 'పూర్తయింది', 'Current': 'ప్రస్తుతం', 'Upcoming': 'రాబోయేది', 'UPCOMING': 'రాబోయేది',
@@ -11884,5 +12118,14 @@
 
 </script>
 
+<script>
+    // Pause the banner lighting while the banner is scrolled out of view (saves battery)
+    setInterval(function () {
+        document.querySelectorAll('.festival-banner-strip.is-animated').forEach(function (b) {
+            var r = b.getBoundingClientRect();
+            b.classList.toggle('is-offscreen', r.bottom < 0 || r.top > window.innerHeight);
+        });
+    }, 1000);
+</script>
 </body>
 </html>

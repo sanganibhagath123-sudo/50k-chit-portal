@@ -100,6 +100,11 @@ service cloud.firestore {
         || isAdmin();
       allow delete: if isAdmin();
     }
+    // push notification tokens: each member's own phones (notify/state is server-only)
+    match /pushTokens/{name} {
+      allow read, write: if isOwner(name);
+    }
+
     match /chat/{msgId} {
       allow read: if approved();
       allow create: if approved()

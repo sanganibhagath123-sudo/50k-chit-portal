@@ -11,5 +11,9 @@ window.FIREBASE_CONFIG = {
   storageBucket: "k-chit-d0394.firebasestorage.app",
   messagingSenderId: "199570575888",
   appId: "1:199570575888:web:b0ba1a0e714c1855eb7095",
-  measurementId: "G-MLBCYHXEV3"
+  measurementId: "G-MLBCYHXEV3",
+  // Push notifications: Firebase Console → ⚙️ Project settings → Cloud Messaging →
+  // Web Push certificates → "Generate key pair" → paste the key between the quotes.
+  // Empty = reminders switched off in the app.
+  vapidKey: ""
 };

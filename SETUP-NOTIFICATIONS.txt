@@ -1,0 +1,95 @@
+50K CHIT PORTAL – PUSH NOTIFICATIONS SETUP (okkasari chesthe chalu)
+====================================================================
+Project: k-chit-d0394
+App close lo unna members phone ki reminders vastayi:
+  • 5th (auction roju): andariki 1 notification, auction ki 30 nimishala mundu
+  • 6th–10th: pay cheyyani vallaki roju 1 (10 AM)
+  • 11th–20th: pay cheyyani vallaki roju 2 (10 AM + 7 PM)
+  • 21st: Bhagath ki "still pending" list (reminders aagipotayi)
+  • Bhagath ki: kotha registration, evaraina "I Have Paid" nokkinappudu
+  • "I Have Paid" nokkina / verify ayina vaallaki reminders raavu
+  • Auction result vachake reminders start (amount teliyakunda pampadu)
+
+Kharchu: nelaki ₹0–10 (Google free limits lone). Card link cheyyali.
+
+
+STEP 1 – BLAZE PLAN + BUDGET ALERT (Bhagath, 10 nimishalu)
+-----------------------------------------------------------
+1. https://console.firebase.google.com → k-chit-d0394 open
+2. Edama kinda "Spark – No-cost" → Upgrade → Blaze → billing account create
+   (India, card details, international transactions ON undali) → confirm
+3. Budget: ₹100 pettandi, alerts 50% / 90% / 100%
+   (adagakapothe: console.cloud.google.com → Billing → Budgets & alerts → Create budget)
+
+
+STEP 2 – WEB PUSH KEY (2 nimishalu)
+-----------------------------------
+1. Firebase Console → ⚙️ (Project settings) → "Cloud Messaging" tab
+2. Kinda "Web configuration" → "Web Push certificates" → "Generate key pair"
+3. Vachina pedda key (B... tho start avutundi) copy chesi Claude ki pampandi
+   (leda firebase-config.js lo  vapidKey: ""  quotes madhyalo paste cheyandi).
+   Idi public key, share cheyyadam safe.
+
+
+STEP 3 – FIRESTORE RULES UPDATE (2 nimishalu)
+---------------------------------------------
+1. Firebase Console → Firestore Database → "Rules" tab
+2. Akkada unna text motham delete
+3. Ee folder lo unna  firestore.rules  open chesi (Notepad), motham copy → paste
+4. "Publish"
+(Kotha rule: prathi member tana phone token ni matrame save cheyagaladu.)
+
+
+STEP 4 – SERVER CODE DEPLOY (Google Cloud Shell, browser lo, 15 nimishalu)
+---------------------------------------------------------------------------
+Mee computer lo emi install cheyyakkarledu.
+
+1. https://console.cloud.google.com  open → paina project "k-chit-d0394" select
+2. Paina kudi vaipu  >_  (Activate Cloud Shell) icon click → kinda black terminal open avtundi
+3. Terminal lo ⋮ (More) → "Upload" → notify-server.zip select
+4. Ee commands okkokkati paste chesi Enter:
+
+   unzip -o notify-server.zip -d notify-server
+   cd notify-server
+   (cd functions && npm install)
+   firebase login --no-localhost
+      → link vastundi, open chesi Bhagath Google account tho Allow → vachina code copy chesi terminal lo paste
+   firebase deploy --only functions --project k-chit-d0394
+
+   ("firebase: command not found" ani vasthe:  npm install -g firebase-tools  run chesi malli try)
+   ("runtime nodejs24 not supported" lanti error vasthe:  npm install -g firebase-tools@latest  chesi malli deploy)
+
+5. Madhyalo questions vasthe:
+   • "enable APIs?" leda "Would you like to proceed?"  →  y
+   • "How many days do you want to keep container images?"  →  1
+6. Chivarlo "Deploy complete!" vasthe ayipoyindi ✅
+   Error vasthe (mukhyamga modatisari "permission" / "Eventarc" error):
+   5 nimishalu agi  firebase deploy --only functions --project k-chit-d0394  malli run cheyandi.
+
+
+STEP 5 – WEBSITE UPDATE + TEST
+------------------------------
+1. GitHub lo upload: index.html, sw.js, firebase-config.js (vapidKey tho)
+2. Phone lo app close chesi malli open → Home lo "🔔 Turn on reminders" → Turn on → Allow
+   (Profile → 🔔 Reminders lo "✅ On" kanipistundi)
+3. Members andariki cheppandi: app open chesi "Turn on" nokkali.
+
+
+PHONE LO RAAKAPOTHE
+-------------------
+• Android Xiaomi / Redmi / POCO / Oppo / Vivo / Realme:
+  Settings → Apps → Chrome (leda 50K Chit app) → Battery → "No restrictions"
+  + Notifications → Allow
+• "Blocked" ani chupisthe: Settings → Apps → Chrome → Notifications → Allow, app reopen
+• iPhone: Safari → Share → "Add to Home Screen" → aa icon nunchi open chesi Turn on
+  (iOS 16.4 leda kotha version kavali)
+• Logout chesthe aa phone ki reminders aagipotayi (vere vaalla phone lo login ayina safe)
+
+
+GURTHU PETTUKONDI
+-----------------
+• Bhagath prathi nela auction mundu "Move to next month" (Auction page → Reset) cheyyali,
+  lekapothe kotha nela auction notification / reminders sariga raavu.
+• Notifications 100% guarantee kaadu (phone off, permission ivvakapovadam).
+  Auction result ni WhatsApp group lo share cheyyadam kontinue cheyandi.
+• Aapalante: Cloud Shell lo  firebase functions:delete chitReminders chitNewMember chitPaidAlert --region asia-south1 --project k-chit-d0394

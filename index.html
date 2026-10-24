@@ -5408,6 +5408,10 @@
         }
         [data-theme="light"] .won-badge { color: #a16207; background: #fef9c3; border-color: #eab308; }
         [data-theme="light"] .member-username-sub { color: #64748b; }
+
+        .push-warn-chip { color: #fbbf24 !important; background: rgba(251, 191, 36, 0.12) !important; border: 1px solid rgba(251, 191, 36, 0.45) !important; white-space: nowrap; }
+        [data-theme="light"] .push-warn-chip { color: #b45309 !important; background: #fffbeb !important; }
+        .push-chip { border-color: rgba(255, 215, 0, 0.45) !important; }
     </style>
 <script>
     // Signed in last time on this device? Show a small loading screen instead of the lamp while we check.
@@ -6633,6 +6637,7 @@
         markSignedInDevice(true);
         openPortal(isAdmin ? 'Bhagath' : username);
         endBootSplash();
+        setTimeout(() => { enablePushNotifications(false); }, 1500);
         return true;
     }
 
@@ -6844,6 +6849,7 @@
 
     async function fbLogout() {
         markSignedInDevice(false);
+        await removePushToken();
         fbDetach();
         FB.user = null; FB.uid = null; FB.username = null; FB.isAdmin = false; FB.gotMembers = false;
         fbClearCache();
@@ -8353,6 +8359,7 @@
 
                 ${(isAdmin && !isSelf && !isOrg) ? generateCoAdminCardHtml(viewUser) : ''}
                 ${won ? generateSuretySectionHtml(viewUser, isSelf, isAdmin, won) : ''}
+                ${isSelf ? generatePushCardHtml() : ''}
                 ${isSelf ? generateInstallCardHtml() : ''}
 
                 <!-- 2-4. DETAILS FORM -->
@@ -8871,8 +8878,7 @@
                     <div class="chip-left">
                         <span class="member-index-badge">${String(idx + 1).padStart(2, '0')}</span>
                         <span class="member-name-wrap">
-                            <span class="member-name-text">${showFull ? pbEsc(fullName) : pbEsc(rawName)}</span>
-                            ${showFull ? `<span class="member-username-sub">@${pbEsc(rawName)}</span>` : ''}
+                            <span class="member-name-text"${isStaffUser() ? ` title="@${pbEsc(rawName)}"` : ''}>${showFull ? pbEsc(fullName) : pbEsc(rawName)}</span>
                         </span>
                         ${wonM ? `<span class="won-badge" title="Won Month ${pbPad(wonM)}">🏆 M${pbPad(wonM)}</span>` : ''}
                         ${streakBadgeHtml(rawName, true)}
@@ -10215,6 +10221,7 @@
             canvas.innerHTML = `
                 <div class="home-wrapper-compact">
                     ${generateInstallChipHtml()}
+                    ${generatePushChipHtml()}
                     ${generateApprovalHomeAlertHtml()}
                     ${generateSuretyHomeAlertHtml()}
                     ${bannerHtml}
@@ -11796,6 +11803,123 @@
         if (el) el.remove();
     }
 
+
+    // ==========================================
+    // PUSH NOTIFICATIONS (reminders even when the app is closed)
+    // Needs: vapidKey in firebase-config.js + the "chit-notify" Cloud Functions deployed.
+    // Each phone's token is saved in pushTokens/{username}.
+    // ==========================================
+    const PUSH = { M: null, messaging: null, token: null };
+    function pushConfigured() { return !!(FB_MODE && FB_CFG && FB_CFG.vapidKey); }
+    function pushBrowserOk() { return ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window) && location.protocol === 'https:'; }
+    function pushNeedsInstallFirst() { return isIOSDevice && !isStandaloneApp(); } // iPhone: only the Home Screen app can get notifications
+    function pushState() {
+        if (!pushConfigured()) return 'off';
+        if (pushNeedsInstallFirst()) return 'install';
+        if (!pushBrowserOk()) return 'unsupported';
+        if (Notification.permission === 'denied') return 'blocked';
+        if (Notification.permission === 'granted') return 'on';
+        return 'ask';
+    }
+    async function pushMessaging() {
+        if (PUSH.messaging) return PUSH.messaging;
+        PUSH.M = await import(FB_SDK + 'firebase-messaging.js');
+        if (PUSH.M.isSupported && !(await PUSH.M.isSupported())) throw new Error('unsupported');
+        PUSH.messaging = PUSH.M.getMessaging(FB.app);
+        return PUSH.messaging;
+    }
+    // ask = true when the member tapped "Turn on" (shows the permission popup)
+    async function enablePushNotifications(ask) {
+        const stateNow = pushState();
+        if (stateNow === 'off' || stateNow === 'unsupported' || stateNow === 'install' || !FB.user) return false;
+        try {
+            if (Notification.permission !== 'granted') {
+                if (!ask) return false;
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') { refreshPushUi(); return false; }
+            }
+            const reg = await navigator.serviceWorker.register('sw.js');
+            await navigator.serviceWorker.ready;
+            const messaging = await pushMessaging();
+            const token = await PUSH.M.getToken(messaging, { vapidKey: FB_CFG.vapidKey, serviceWorkerRegistration: reg });
+            if (!token) return false;
+            PUSH.token = token;
+            let saved = '';
+            try { saved = localStorage.getItem('chit_push_token') || ''; } catch(e) {}
+            if (saved !== token + '|' + FB.username) {
+                const F = FB.F;
+                await F.setDoc(F.doc(FB.db, 'pushTokens', FB.username), { tokens: F.arrayUnion(token), updatedAt: Date.now() }, { merge: true });
+                try { localStorage.setItem('chit_push_token', token + '|' + FB.username); } catch(e) {}
+            }
+            if (ask) fbToast('🔔 Reminders are on for this phone.');
+            refreshPushUi();
+            return true;
+        } catch(e) {
+            console.warn('[push] could not enable', e);
+            if (ask) fbToast('⚠️ Could not turn on notifications on this phone.');
+            refreshPushUi();
+            return false;
+        }
+    }
+    // On logout: this phone should stop getting this member's reminders
+    async function removePushToken() {
+        let saved = '';
+        try { saved = localStorage.getItem('chit_push_token') || ''; } catch(e) {}
+        const [token, user] = saved.split('|');
+        if (!token || !user || !FB.F || !FB.user) return;
+        try {
+            const F = FB.F;
+            await F.setDoc(F.doc(FB.db, 'pushTokens', user), { tokens: F.arrayRemove(token) }, { merge: true });
+        } catch(e) {}
+        try { if (PUSH.M && PUSH.messaging) await PUSH.M.deleteToken(PUSH.messaging); } catch(e) {}
+        try { localStorage.removeItem('chit_push_token'); } catch(e) {}
+    }
+    function dismissPushChip() {
+        try { localStorage.setItem('chit_push_chip_dismissed', String(Date.now())); } catch(e) {}
+        const el = document.getElementById('pushChip'); if (el) el.remove();
+    }
+    function generatePushChipHtml() {
+        const st = pushState();
+        if (st !== 'ask') return '';
+        let dismissed = 0;
+        try { dismissed = Number(localStorage.getItem('chit_push_chip_dismissed') || 0); } catch(e) {}
+        if (dismissed && Date.now() - dismissed < 5 * 24 * 3600 * 1000) return '';
+        return `
+            <div class="install-chip push-chip" id="pushChip">
+                <span class="install-ico">🔔</span>
+                <div><b>Turn on reminders</b><span>Auction day and payment reminders, even when the app is closed</span></div>
+                <button onclick="enablePushNotifications(true)">Turn on</button>
+                <button class="install-x" onclick="dismissPushChip()" aria-label="Close">✕</button>
+            </div>`;
+    }
+    function generatePushCardHtml() {
+        const st = pushState();
+        if (st === 'off') return '';
+        const info = {
+            on:          { chip: '<span class="sr-chip is-ver">✅ On</span>', hint: 'This phone gets the auction-day alert and payment reminders until you pay.' },
+            ask:         { chip: '<button class="btn-postpone-save" onclick="enablePushNotifications(true)">🔔 Turn on</button>', hint: 'Get the auction-day alert and payment reminders, even when the app is closed.' },
+            blocked:     { chip: '<span class="sr-chip push-warn-chip">Blocked</span>', hint: 'Notifications are blocked for this site. Open phone Settings → Apps → Chrome (or the 50K Chit app) → Notifications → Allow, then reopen the app.' },
+            install:     { chip: '<span class="sr-chip push-warn-chip">Install first</span>', hint: 'On iPhone, add the app to your Home Screen first (Safari → Share → Add to Home Screen), open it from there, then turn on reminders.' },
+            unsupported: { chip: '<span class="sr-chip push-warn-chip">Not available</span>', hint: 'This browser cannot show notifications. Open the app in Chrome.' }
+        }[st];
+        return `
+            <div class="pf-card" id="pushCard">
+                <div class="sr-head">
+                    <div>
+                        <div class="pf-card-title">🔔 Reminders</div>
+                        <p class="pf-hint" style="margin:4px 0 0;">${info.hint}</p>
+                    </div>
+                    ${info.chip}
+                </div>
+            </div>`;
+    }
+    function refreshPushUi() {
+        const chip = document.getElementById('pushChip');
+        if (chip && pushState() !== 'ask') chip.remove();
+        const card = document.getElementById('pushCard');
+        if (card) { const tmp = document.createElement('div'); tmp.innerHTML = generatePushCardHtml().trim(); if (tmp.firstChild) card.replaceWith(tmp.firstChild); else card.remove(); }
+    }
+
     function generateInstallChipHtml() {
         if (isStandaloneApp()) return '';
         let dismissed = 0;
@@ -12088,7 +12212,7 @@
         'Scan QR & Pay': 'QR స్కాన్ చేసి చెల్లించండి', 'Open QR': 'QR చూడండి', 'Amount to Pay': 'చెల్లించాల్సిన మొత్తం',
         'Days': 'రోజులు', 'Hours': 'గంటలు', 'Mins': 'నిమి', 'Secs': 'సెక',
         'Group Collection Progress': 'గ్రూప్ వసూలు ప్రగతి', 'Current Month Collected': 'ఈ నెల వసూలు', 'Monthly Pool Target': 'నెలవారీ లక్ష్యం',
-        'Vacant': 'ఖాళీ', 'Slot Available': 'స్లాట్ ఖాళీ', 'Paid 🟢': 'చెల్లించారు 🟢', 'Pending 🔴': 'బాకీ 🔴', 'Unpaid 🔴': 'బాకీ 🔴', 'Waiting ⏳': 'వేచి ఉంది ⏳', 'Share result on WhatsApp': 'WhatsApp లో షేర్ చేయండి', 'Copy': 'కాపీ', 'After auction': 'వేలం తర్వాత', 'WAITING': 'వేచి ఉంది', '✨ Shine Animation': '✨ మెరుపు యానిమేషన్', 'Review 🟡': 'పరిశీలన 🟡',
+        'Vacant': 'ఖాళీ', 'Slot Available': 'స్లాట్ ఖాళీ', 'Paid 🟢': 'చెల్లించారు 🟢', 'Pending 🔴': 'బాకీ 🔴', 'Unpaid 🔴': 'బాకీ 🔴', 'Waiting ⏳': 'వేచి ఉంది ⏳', 'Share result on WhatsApp': 'WhatsApp లో షేర్ చేయండి', 'Copy': 'కాపీ', 'Turn on reminders': 'రిమైండర్లు ఆన్ చేయండి', 'Turn on': 'ఆన్ చేయండి', '🔔 Turn on': '🔔 ఆన్ చేయండి', '🔔 Reminders': '🔔 రిమైండర్లు', 'After auction': 'వేలం తర్వాత', 'WAITING': 'వేచి ఉంది', '✨ Shine Animation': '✨ మెరుపు యానిమేషన్', 'Review 🟡': 'పరిశీలన 🟡',
         '✅ Paid': '✅ చెల్లించారు', '🟡 Review': '🟡 పరిశీలన',
         'Chit Value (Gross)': 'చిట్ విలువ', 'Net Pool (Prize)': 'నికర బహుమతి', 'Next Auction': 'తదుపరి వేలం', 'Registered Members': 'నమోదైన సభ్యులు',
         '20-MONTH TIMELINE': '20 నెలల టైమ్‌లైన్', 'Completed': 'పూర్తయింది', 'Current': 'ప్రస్తుతం', 'Upcoming': 'రాబోయేది', 'UPCOMING': 'రాబోయేది',

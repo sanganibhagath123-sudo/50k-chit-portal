@@ -1,6 +1,6 @@
 // 50K Chit Portal – service worker
 // Network-first: members always get the latest version; cached copy is used only when offline.
-const CACHE = 'chit-portal-v4';
+const CACHE = 'chit-portal-v5';
 const CORE = ['./', './index.html', './manifest.webmanifest', './firebase-config.js', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -30,5 +30,35 @@ self.addEventListener('fetch', (event) => {
         return res;
       })
       .catch(() => caches.match(req).then((hit) => hit || (req.mode === 'navigate' ? caches.match('./index.html') : Response.error())))
+  );
+});
+
+// ---------- Push notifications (sent by the "chit-notify" Cloud Functions) ----------
+self.addEventListener('push', (event) => {
+  let p = {};
+  try { p = event.data ? event.data.json() : {}; } catch (e) { p = { data: { body: event.data && event.data.text() } }; }
+  const d = p.data || {};
+  const n = p.notification || {};
+  const title = d.title || n.title || '50K Chit';
+  const options = {
+    body: d.body || n.body || '',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag: d.tag || 'chit',
+    renotify: true,
+    data: { url: self.registration.scope }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Tap on a notification → open (or focus) the app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || self.registration.scope;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if (c.url.startsWith(self.registration.scope) && 'focus' in c) return c.focus(); }
+      return self.clients.openWindow(url);
+    })
   );
 });

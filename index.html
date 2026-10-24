@@ -5395,9 +5395,47 @@
         .wa-share-hint { font-size: 11px; color: #94a3b8; margin-bottom: 10px; }
         [data-theme="light"] .wa-copy-btn { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
         [data-theme="light"] .wa-share-hint { color: #64748b; }
+
+        /* Members directory: full name, @username, winner badge */
+        .member-status-chip .chip-left { min-width: 0; }
+        .member-name-wrap { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+        .member-name-wrap .member-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .member-username-sub { font-size: 11px; color: #94a3b8; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .won-badge {
+            flex: none; font-size: 11px; font-weight: 800; color: #ffd700; white-space: nowrap;
+            background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.4);
+            padding: 2px 7px; border-radius: 999px;
+        }
+        [data-theme="light"] .won-badge { color: #a16207; background: #fef9c3; border-color: #eab308; }
+        [data-theme="light"] .member-username-sub { color: #64748b; }
     </style>
+<script>
+    // Signed in last time on this device? Show a small loading screen instead of the lamp while we check.
+    try { if (localStorage.getItem('chit_fb_signed_in') === '1') document.documentElement.classList.add('booting'); } catch (e) {}
+</script>
+<style>
+    #bootSplash { display: none; position: fixed; inset: 0; z-index: 200000; background: #0b0c10;
+        flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: #e2e8f0;
+        font-family: inherit; text-align: center; padding: 24px; }
+    html.booting #bootSplash { display: flex; }
+    #bootSplash img { width: 84px; height: 84px; border-radius: 22px; box-shadow: 0 10px 40px rgba(255, 215, 0, 0.25); }
+    #bootSplash .boot-title { font-size: 18px; font-weight: 800; color: #ffd700; letter-spacing: .3px; }
+    #bootSplash .boot-msg { font-size: 13px; color: #94a3b8; min-height: 18px; }
+    #bootSplash .boot-spin { width: 26px; height: 26px; border-radius: 50%; border: 3px solid rgba(255, 215, 0, 0.2);
+        border-top-color: #ffd700; animation: bootSpin .8s linear infinite; }
+    #bootSplash .boot-skip { display: none; margin-top: 6px; background: none; border: 1px solid rgba(255,255,255,.2);
+        color: #cbd5e1; font: inherit; font-size: 13px; padding: 8px 14px; border-radius: 10px; cursor: pointer; }
+    @keyframes bootSpin { to { transform: rotate(360deg); } }
+</style>
 </head>
 <body data-on="false">
+<div id="bootSplash" aria-live="polite">
+    <img src="icon-192.png" alt="" />
+    <div class="boot-title">50K Chit</div>
+    <div class="boot-spin"></div>
+    <div class="boot-msg" id="bootMsg">Opening your portal…</div>
+    <button type="button" class="boot-skip" id="bootSkip" onclick="endBootSplash()">Go to sign in</button>
+</div>
 <!-- Night sky (stars) + white lamp light, login screen only -->
 <canvas id="nightSky" aria-hidden="true"></canvas>
 <div id="lampGlow" aria-hidden="true"></div>
@@ -6330,7 +6368,27 @@
         return o;
     }
 
+    let _nameFillTimer = null;
+    function fbScheduleNameBackfill() {
+        if (!FB.isAdmin) return;
+        clearTimeout(_nameFillTimer);
+        _nameFillTimer = setTimeout(fbBackfillNames, 2000);
+    }
+    function fbBackfillNames() {
+        if (!FB.on || !FB.isAdmin || !FB.F) return;
+        const profs = FB.shardData.profiles || {};
+        (FB.last.members || []).forEach(m => {
+            const key = (m.username || '').toLowerCase();
+            const pf = profs[key];
+            const fn = (pf && pf.fullName) ? String(pf.fullName).trim().slice(0, 40) : '';
+            if (fn && fn !== (m.fullName || '')) {
+                FB.F.setDoc(FB.F.doc(FB.db, 'members', key), { fullName: fn }, { merge: true }).catch(fbWriteError);
+            }
+        });
+    }
+
     function fbRebuildShard(k) {
+        if (k === 'chit_member_profiles') fbScheduleNameBackfill();
         const coll = FB_SHARDED[k];
         const m = Object.assign({}, FB.shardData[coll] || {});
         if (!fbCanReadAll(coll)) {
@@ -6400,12 +6458,14 @@
                 const x = d.data();
                 const un = x.username || d.id;
                 arr.push({ username: un === 'bhagath' ? 'Bhagath' : un, role: x.role || 'member', status: x.status || 'pending',
-                           createdAt: x.createdAt || '', approvedAt: x.approvedAt || '', requestedAt: x.requestedAt || 0 });
+                           createdAt: x.createdAt || '', approvedAt: x.approvedAt || '', requestedAt: x.requestedAt || 0,
+                           fullName: x.fullName || '' });
             });
             arr.sort((a, b) => (a.requestedAt || 0) - (b.requestedAt || 0));
             FB.last.members = arr;
             FB.gotMembers = true;
             fbApply('chit_50k_members', JSON.stringify(arr));
+            fbScheduleNameBackfill();
         }, fbListenError));
         FB.unsubs.push(F.onSnapshot(F.query(F.collection(db, 'chat'), F.orderBy('ts', 'desc'), F.limit(150)), qs => {
             const arr = [];
@@ -6473,26 +6533,65 @@
     });
 
     // ---- sign-in / session ----
+    function endBootSplash() {
+        document.documentElement.classList.remove('booting');
+    }
+    function setBootMsg(t, showSkip) {
+        const m = document.getElementById('bootMsg'); if (m) m.textContent = t;
+        const b = document.getElementById('bootSkip'); if (b && showSkip) b.style.display = 'inline-block';
+    }
+    function markSignedInDevice(on) {
+        try { if (on) localStorage.setItem('chit_fb_signed_in', '1'); else localStorage.removeItem('chit_fb_signed_in'); } catch(e) {}
+    }
+    // Read a document; retry on network trouble (phones often open the app before the internet is ready).
+    // Throws only if the server could not be reached after several tries.
+    async function fbGetDocRetry(ref, tries) {
+        const F = FB.F; tries = tries || 4;
+        let last;
+        for (let i = 0; i < tries; i++) {
+            try { return await F.getDoc(ref); }
+            catch(e) {
+                last = e;
+                if (e && e.code === 'permission-denied') throw e;
+                await new Promise(r => setTimeout(r, 700 * (i + 1)));
+            }
+        }
+        throw last;
+    }
+
     async function fbAfterSignIn(user, silent) {
         const F = FB.F, db = FB.db;
-        let username = null;
+        // Read who this login is. A network problem must NOT log the member out:
+        // keep the login and try again; only a real account problem signs out.
+        let username = null, isAdmin = false, status = 'pending', memberUid = null;
         try {
-            const u = await F.getDoc(F.doc(db, 'users', user.uid));
+            const u = await fbGetDocRetry(F.doc(db, 'users', user.uid));
             username = u.exists() ? u.data().username : null;
-        } catch(e) {}
+            if (username) {
+                try { isAdmin = (await fbGetDocRetry(F.doc(db, 'admins', user.uid))).exists(); }
+                catch(e) { if (!(e && e.code === 'permission-denied')) throw e; }
+                const m = await fbGetDocRetry(F.doc(db, 'members', username));
+                if (m.exists()) { status = m.data().status || 'pending'; memberUid = m.data().uid || null; }
+            }
+        } catch(e) {
+            console.warn('[firebase] sign-in check failed, keeping the login', e);
+            if (!silent) {
+                showAuthMsg('loginMsg', 'Could not reach the server. Check your internet connection and try again.');
+                return false;
+            }
+            setBootMsg('Waiting for internet… retrying', true);
+            await new Promise(r => setTimeout(r, 4000));
+            if (!document.documentElement.classList.contains('booting')) return false; // user chose the sign-in screen
+            return fbAfterSignIn(user, silent);
+        }
         if (!username) {
+            markSignedInDevice(false);
             await FB.A.signOut(FB.auth);
             if (!silent) showAuthMsg('loginMsg', 'This account is not fully set up. Please register again or contact Bhagath.');
             return false;
         }
-        let isAdmin = false;
-        try { isAdmin = (await F.getDoc(F.doc(db, 'admins', user.uid))).exists(); } catch(e) {}
-        let status = 'pending', memberUid = null;
-        try {
-            const m = await F.getDoc(F.doc(db, 'members', username));
-            if (m.exists()) { status = m.data().status || 'pending'; memberUid = m.data().uid || null; }
-        } catch(e) {}
         if (memberUid && memberUid !== user.uid) {
+            markSignedInDevice(false);
             await FB.A.signOut(FB.auth);
             if (!silent) showAuthMsg('loginMsg', 'This password was reset. Please sign in with your new password.');
             return false;
@@ -6501,6 +6600,7 @@
             try { await F.setDoc(F.doc(db, 'members', username), { status: 'approved', approvedAt: fbToday() }, { merge: true }); status = 'approved'; } catch(e) {}
         }
         if (status !== 'approved') {
+            markSignedInDevice(false);
             await FB.A.signOut(FB.auth);
             if (!silent) {
                 if (status === 'rejected') showAuthMsg('loginMsg', '❌ Your registration was rejected. Please contact Bhagath.');
@@ -6530,7 +6630,9 @@
         const allIn = () => FB.gotMembers && Object.values(FB_SHARED).every(n => FB.firstSeen.has(n));
         while (!allIn() && Date.now() - t0 < 5000) await new Promise(r => setTimeout(r, 80));
         await new Promise(r => setTimeout(r, 150));
+        markSignedInDevice(true);
         openPortal(isAdmin ? 'Bhagath' : username);
+        endBootSplash();
         return true;
     }
 
@@ -6540,6 +6642,7 @@
         catch(e) {
             console.error(e);
             showAuthMsg('loginMsg', 'Could not reach the server. Check your internet connection and refresh the page.');
+            setBootMsg('No internet. Connect and reopen the app.', true);
             return false;
         }
         FB.on = true;
@@ -6643,7 +6746,7 @@
                 const role = u === 'bhagath' ? 'organizer' : 'member';
                 if (role !== 'organizer' && used >= CHIT_MAX_MEMBERS) throw { code: 'app/full' };
                 await F.setDoc(F.doc(db, 'members', u), {
-                    uid, username: u, status: 'pending', role,
+                    uid, username: u, status: 'pending', role, fullName: fullName.slice(0, 40),
                     createdAt: fbToday(), requestedAt: Date.now()
                 });
                 createdMember = true;
@@ -6740,6 +6843,7 @@
     }
 
     async function fbLogout() {
+        markSignedInDevice(false);
         fbDetach();
         FB.user = null; FB.uid = null; FB.username = null; FB.isAdmin = false; FB.gotMembers = false;
         fbClearCache();
@@ -8736,9 +8840,16 @@
         let submittedCount = 0;
         let chipsHtml = '';
 
+        // who already won, and in which month
+        const wonMonthOf = {};
+        getAuctionHistory().forEach(h => { const w = (h.winner || '').toLowerCase(); if (w && !wonMonthOf[w]) wonMonthOf[w] = Number(h.month); });
+
         // Display ONLY real registered members, followed by available slots
         members.forEach((memberObj, idx) => {
             const rawName = typeof memberObj === 'string' ? memberObj : (memberObj.username || 'Member');
+            const fullName = (typeof memberObj === 'object' && memberObj.fullName) || getMemberProfile(rawName).fullName || '';
+            const showFull = fullName && fullName.trim().toLowerCase() !== rawName.toLowerCase();
+            const wonM = wonMonthOf[rawName.toLowerCase()];
             const cleanKey = rawName.toLowerCase();
             const record = ledger[cleanKey] || { status: 'pending' };
 
@@ -8759,7 +8870,11 @@
                 <div class="member-status-chip">
                     <div class="chip-left">
                         <span class="member-index-badge">${String(idx + 1).padStart(2, '0')}</span>
-                        <span class="member-name-text">${rawName}</span>
+                        <span class="member-name-wrap">
+                            <span class="member-name-text">${showFull ? pbEsc(fullName) : pbEsc(rawName)}</span>
+                            ${showFull ? `<span class="member-username-sub">@${pbEsc(rawName)}</span>` : ''}
+                        </span>
+                        ${wonM ? `<span class="won-badge" title="Won Month ${pbPad(wonM)}">🏆 M${pbPad(wonM)}</span>` : ''}
                         ${streakBadgeHtml(rawName, true)}
                     </div>
                     <span class="member-chip-pill ${pillClass}">${pillText}</span>
@@ -12105,7 +12220,12 @@
                 setTimeout(() => { if (!isOn) { toggleLamp(); window._lampAutoAt = Date.now(); } springBackCord(34); }, 120); // re-check: the user may have pulled the cord meanwhile
             }
         }, 4000); };
-        if (FB_MODE) { fbInit().then(signedIn => { if (!signedIn) startLampTimer(); }); return; }
+        if (FB_MODE) {
+            setTimeout(() => setBootMsg('Still connecting… check your internet', true), 12000);
+            fbInit().then(signedIn => { if (!signedIn) { endBootSplash(); startLampTimer(); } });
+            return;
+        }
+        endBootSplash();
         if (restoreSession()) return;
         startLampTimer();
     })();
